@@ -47,7 +47,7 @@ const Index = () => {
             />
           )}
           {activeTab === "brochure" && <BrochureTab />}
-          {activeTab === "website" && <WebsiteTab />}
+          {activeTab === "website" && <WebsiteTab season={season} shows={shows} />}
         </>
       )}
     </div>
