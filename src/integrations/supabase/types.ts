@@ -14,7 +14,131 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      show_images: {
+        Row: {
+          alt_text: string | null
+          created_at: string
+          file_name: string | null
+          file_size: number | null
+          file_url: string
+          id: string
+          position: number | null
+          show_id: string
+          type: string
+        }
+        Insert: {
+          alt_text?: string | null
+          created_at?: string
+          file_name?: string | null
+          file_size?: number | null
+          file_url: string
+          id?: string
+          position?: number | null
+          show_id: string
+          type: string
+        }
+        Update: {
+          alt_text?: string | null
+          created_at?: string
+          file_name?: string | null
+          file_size?: number | null
+          file_url?: string
+          id?: string
+          position?: number | null
+          show_id?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "show_images_show_id_fkey"
+            columns: ["show_id"]
+            isOneToOne: false
+            referencedRelation: "shows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shows: {
+        Row: {
+          created_at: string
+          dates: string[] | null
+          description_text: string | null
+          discount_price: number | null
+          end_time: string | null
+          genre: string | null
+          hero_image_preview: string | null
+          hero_image_url: string | null
+          id: string
+          notes: string | null
+          price: number | null
+          season: string
+          seo_keyword: string | null
+          seo_meta_description: string | null
+          seo_slug: string | null
+          seo_title: string | null
+          social_facebook: string | null
+          social_instagram: string | null
+          start_time: string | null
+          subtitle: string | null
+          text_filename: string | null
+          title: string
+          updated_at: string
+          web_text: string | null
+        }
+        Insert: {
+          created_at?: string
+          dates?: string[] | null
+          description_text?: string | null
+          discount_price?: number | null
+          end_time?: string | null
+          genre?: string | null
+          hero_image_preview?: string | null
+          hero_image_url?: string | null
+          id?: string
+          notes?: string | null
+          price?: number | null
+          season?: string
+          seo_keyword?: string | null
+          seo_meta_description?: string | null
+          seo_slug?: string | null
+          seo_title?: string | null
+          social_facebook?: string | null
+          social_instagram?: string | null
+          start_time?: string | null
+          subtitle?: string | null
+          text_filename?: string | null
+          title?: string
+          updated_at?: string
+          web_text?: string | null
+        }
+        Update: {
+          created_at?: string
+          dates?: string[] | null
+          description_text?: string | null
+          discount_price?: number | null
+          end_time?: string | null
+          genre?: string | null
+          hero_image_preview?: string | null
+          hero_image_url?: string | null
+          id?: string
+          notes?: string | null
+          price?: number | null
+          season?: string
+          seo_keyword?: string | null
+          seo_meta_description?: string | null
+          seo_slug?: string | null
+          seo_title?: string | null
+          social_facebook?: string | null
+          social_instagram?: string | null
+          start_time?: string | null
+          subtitle?: string | null
+          text_filename?: string | null
+          title?: string
+          updated_at?: string
+          web_text?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
