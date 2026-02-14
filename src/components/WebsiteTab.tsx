@@ -4,7 +4,7 @@ import { nl } from "date-fns/locale";
 import {
   Monitor, CheckCircle2, Check, AlertTriangle, Globe, Search,
   Type, Info, Eye, EyeOff, Sparkles, Loader2, ClipboardCopy,
-  Image,
+  Image as ImageIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,6 +20,7 @@ import {
 import { useUpdateShow } from "@/hooks/useShows";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { ImageCropSection } from "@/components/ImageCropSection";
 
 interface WebsiteTabProps {
   season: string;
@@ -227,7 +228,7 @@ export function WebsiteTab({ season, shows }: WebsiteTabProps) {
                     <img src={show.hero_image_url} alt="" className="w-full h-full object-cover" />
                   ) : (
                     <div className="flex items-center justify-center h-full">
-                      <Image className="h-3 w-3 text-muted-foreground" />
+                      <ImageIcon className="h-3 w-3 text-muted-foreground" />
                     </div>
                   )}
                 </div>
@@ -444,6 +445,9 @@ export function WebsiteTab({ season, shows }: WebsiteTabProps) {
                 )}
               </Button>
             </div>
+
+            {/* SECTIE 5 & 6: AFBEELDINGEN & ALT-TEKSTEN */}
+            <ImageCropSection show={selected} season={season} />
           </>
         )}
       </div>

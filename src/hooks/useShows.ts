@@ -8,7 +8,7 @@ export function useShows(season: string) {
     queryFn: async (): Promise<ShowWithImages[]> => {
       const { data, error } = await supabase
         .from("shows")
-        .select("*, show_images(id, type, file_url, file_name, alt_text, position)")
+        .select("*, show_images(id, type, file_url, file_name, alt_text, position, file_size)")
         .eq("season", season)
         .order("title", { ascending: true });
 
