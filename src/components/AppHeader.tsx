@@ -1,5 +1,6 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import logo from "@/assets/logo-stadstheater-wit.png";
 
 interface AppHeaderProps {
   season: string;
@@ -11,15 +12,7 @@ export function AppHeader({ season, onPrevSeason, onNextSeason }: AppHeaderProps
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-card">
       <div className="container flex h-16 items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary font-bold text-primary-foreground text-lg">
-            S
-          </div>
-          <div>
-            <h1 className="text-lg font-bold leading-tight text-card-foreground">ShowReady</h1>
-            <p className="text-xs text-muted-foreground">Stadstheater Zoetermeer</p>
-          </div>
-        </div>
+        <img src={logo} alt="Stadstheater Zoetermeer" className="h-8" />
 
         <div className="flex items-center gap-1">
           <Button variant="ghost" size="icon" onClick={onPrevSeason} className="h-8 w-8">
