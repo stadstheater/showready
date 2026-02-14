@@ -11,8 +11,11 @@ interface AppHeaderProps {
 export function AppHeader({ season, onPrevSeason, onNextSeason }: AppHeaderProps) {
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-card">
-      <div className="container flex h-16 items-center justify-between">
-        <img src={logo} alt="Stadstheater Zoetermeer" className="h-8" />
+      <div className="container relative flex h-16 items-center justify-between">
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <img src={logo} alt="Stadstheater Zoetermeer" className="h-8" />
+        </div>
+        <div className="w-8" />
 
         <div className="flex items-center gap-1">
           <Button variant="ghost" size="icon" onClick={onPrevSeason} className="h-8 w-8">
