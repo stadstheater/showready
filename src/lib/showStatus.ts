@@ -20,6 +20,7 @@ export interface ShowImage {
   file_name: string | null;
   alt_text: string | null;
   position: number | null;
+  file_size: number | null;
 }
 
 export interface ShowWithImages {
