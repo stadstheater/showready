@@ -13,6 +13,15 @@ export interface ShowChecklist {
   cropSlider: boolean;
 }
 
+export interface ShowImage {
+  id: string;
+  type: string;
+  file_url: string;
+  file_name: string | null;
+  alt_text: string | null;
+  position: number | null;
+}
+
 export interface ShowWithImages {
   id: string;
   season: string;
@@ -38,7 +47,7 @@ export interface ShowWithImages {
   social_instagram: string | null;
   created_at: string;
   updated_at: string;
-  show_images?: { type: string }[];
+  show_images?: ShowImage[];
 }
 
 export function getChecklist(show: ShowWithImages): ShowChecklist {
