@@ -290,8 +290,15 @@ export function VoorstellingenTab({ season, shows, openNewDialog, onNewDialogClo
     const file = e.target.files?.[0];
     if (!file) return;
     try {
-      const text = await file.text();
-      setForm(f => ({ ...f, description_text: text, text_filename: file.name }));
+      const ext = file.name.split(".").pop()?.toLowerCase();
+      if (ext === "txt") {
+        const text = await file.text();
+        setForm(f => ({ ...f, description_text: text, text_filename: file.name }));
+      } else {
+        // For .docx/.pdf, just store the filename — content must be pasted manually
+        toast.info("DOCX/PDF bestanden kunnen niet automatisch gelezen worden. Plak de tekst handmatig in het tekstveld.");
+        setForm(f => ({ ...f, text_filename: file.name }));
+      }
     } catch {
       toast.error("Kon bestand niet lezen");
     }
