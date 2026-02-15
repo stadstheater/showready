@@ -1,5 +1,6 @@
 import { ChevronLeft, ChevronRight, Lock, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import logo from "@/assets/logo-stadstheater-wit.png";
 
 export type TabId = "dashboard" | "voorstellingen" | "brochure" | "website" | "instellingen";
 
@@ -49,7 +50,9 @@ export function AppTabs({ activeTab, onTabChange, season, onPrevSeason, onNextSe
           </div>
         </div>
 
-        {/* Spacer links */}
+        {/* Logo links */}
+        <img src={logo} alt="Stadstheater Zoetermeer" className="h-7 z-10" />
+
         <div className="flex-1" />
 
         {/* Seizoen + Instellingen rechts */}
