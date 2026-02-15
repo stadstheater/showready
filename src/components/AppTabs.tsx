@@ -22,9 +22,9 @@ const tabs: { id: TabId; label: string; disabled?: boolean }[] = [
 export function AppTabs({ activeTab, onTabChange, season, onPrevSeason, onNextSeason }: AppTabsProps) {
   return (
     <nav className="sticky top-0 z-50 border-b border-border bg-card">
-      <div className="container relative flex h-20 items-center">
+      <div className="container relative flex h-20 items-end">
         {/* Tabs gecentreerd */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <div className="absolute inset-x-0 bottom-0 flex justify-center pointer-events-none">
           <div className="flex pointer-events-auto">
             {tabs.map((tab) => (
               <button
