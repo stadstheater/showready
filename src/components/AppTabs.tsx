@@ -21,8 +21,8 @@ const tabs: { id: TabId; label: string; disabled?: boolean }[] = [
 
 export function AppTabs({ activeTab, onTabChange, season, onPrevSeason, onNextSeason }: AppTabsProps) {
   return (
-    <nav className="border-b border-border bg-card">
-      <div className="container relative flex items-center">
+    <nav className="sticky top-0 z-50 border-b border-border bg-card">
+      <div className="container relative flex h-20 items-center">
         {/* Tabs gecentreerd */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <div className="flex pointer-events-auto">
