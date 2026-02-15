@@ -5,15 +5,29 @@ import { DashboardTab } from "@/components/DashboardTab";
 import { VoorstellingenTab } from "@/components/VoorstellingenTab";
 import { BrochureTab } from "@/components/BrochureTab";
 import { WebsiteTab } from "@/components/WebsiteTab";
+import { SettingsTab } from "@/components/SettingsTab";
 import { getCurrentSeason, getNextSeason, getPrevSeason } from "@/lib/season";
 import { useShows } from "@/hooks/useShows";
+import { useSettings } from "@/hooks/useSettings";
 
 const Index = () => {
-  const [season, setSeason] = useState(getCurrentSeason());
+  const { data: settings } = useSettings();
+  const defaultSeason = settings?.default_season;
+  const initialSeason = defaultSeason && defaultSeason !== "auto" ? defaultSeason : getCurrentSeason();
+
+  const [season, setSeason] = useState(initialSeason);
   const [activeTab, setActiveTab] = useState<TabId>("dashboard");
   const [openNewShowDialog, setOpenNewShowDialog] = useState(false);
 
   const { data: shows = [], isLoading } = useShows(season);
+
+  // Update season when settings load and differ from current
+  // (only on first meaningful load)
+  const [settingsApplied, setSettingsApplied] = useState(false);
+  if (!settingsApplied && defaultSeason && defaultSeason !== "auto") {
+    setSeason(defaultSeason);
+    setSettingsApplied(true);
+  }
 
   const handleNewShow = () => {
     setActiveTab("voorstellingen");
@@ -48,6 +62,9 @@ const Index = () => {
           )}
           {activeTab === "brochure" && <BrochureTab />}
           {activeTab === "website" && <WebsiteTab season={season} shows={shows} />}
+          {activeTab === "instellingen" && (
+            <SettingsTab season={season} showCount={shows.length} />
+          )}
         </>
       )}
     </div>

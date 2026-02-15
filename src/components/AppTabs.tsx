@@ -1,6 +1,6 @@
-import { Lock } from "lucide-react";
+import { Lock, Settings } from "lucide-react";
 
-export type TabId = "dashboard" | "voorstellingen" | "brochure" | "website";
+export type TabId = "dashboard" | "voorstellingen" | "brochure" | "website" | "instellingen";
 
 interface AppTabsProps {
   activeTab: TabId;
@@ -39,6 +39,23 @@ export function AppTabs({ activeTab, onTabChange }: AppTabsProps) {
             )}
           </button>
         ))}
+
+        {/* Instellingen rechts uitgelijnd */}
+        <button
+          onClick={() => onTabChange("instellingen")}
+          className={`relative ml-auto flex items-center gap-1.5 px-5 py-3 text-sm font-medium transition-colors
+            ${activeTab === "instellingen"
+              ? "text-primary"
+              : "text-muted-foreground hover:text-card-foreground"
+            }
+          `}
+        >
+          <Settings className="h-4 w-4" />
+          Instellingen
+          {activeTab === "instellingen" && (
+            <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+          )}
+        </button>
       </div>
     </nav>
   );

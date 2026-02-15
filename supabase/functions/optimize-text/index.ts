@@ -10,13 +10,15 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { text, keyword, title } = await req.json();
+    const { text, keyword, title, model, maxWords } = await req.json();
+    const aiModel = model || "google/gemini-3-flash-preview";
+    const wordLimit = maxWords || 150;
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
     const systemPrompt = `Je bent een marketingschrijver voor Stadstheater Zoetermeer. Herschrijf voorstellingsteksten voor de website. Schrijf altijd in het Nederlands.`;
 
-    const userPrompt = `Herschrijf deze voorstellingstekst voor de website van Stadstheater Zoetermeer. Maximaal 150 woorden. Wervend en uitnodigend. Verwerk het zoekwoord '${keyword || title}' op een natuurlijke manier. Sluit af met een call-to-action. Behoud de kern van de inhoud.
+    const userPrompt = `Herschrijf deze voorstellingstekst voor de website van Stadstheater Zoetermeer. Maximaal ${wordLimit} woorden. Wervend en uitnodigend. Verwerk het zoekwoord '${keyword || title}' op een natuurlijke manier. Sluit af met een call-to-action. Behoud de kern van de inhoud.
 
 Titel: ${title}
 
@@ -30,7 +32,7 @@ ${text}`;
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: aiModel,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
