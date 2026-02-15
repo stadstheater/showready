@@ -36,12 +36,14 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <AppHeader
+      <AppHeader />
+      <AppTabs
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
         season={season}
         onPrevSeason={() => setSeason(getPrevSeason(season))}
         onNextSeason={() => setSeason(getNextSeason(season))}
       />
-      <AppTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
       {isLoading ? (
         <div className="flex items-center justify-center py-24">
