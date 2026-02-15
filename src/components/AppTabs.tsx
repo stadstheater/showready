@@ -50,8 +50,8 @@ export function AppTabs({ activeTab, onTabChange, season, onPrevSeason, onNextSe
           </div>
         </div>
 
-        {/* Logo links */}
-        <img src={logo} alt="Stadstheater Zoetermeer" className="h-7 z-10" />
+        {/* Logo links, verticaal gecentreerd */}
+        <img src={logo} alt="Stadstheater Zoetermeer" className="h-7 z-10 self-center" />
 
         <div className="flex-1" />
 
