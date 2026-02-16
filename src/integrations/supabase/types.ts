@@ -78,7 +78,6 @@ export type Database = {
       }
       shows: {
         Row: {
-          created_by: string
           created_at: string
           dates: string[] | null
           description_text: string | null
@@ -105,7 +104,6 @@ export type Database = {
           web_text: string | null
         }
         Insert: {
-          created_by?: string
           created_at?: string
           dates?: string[] | null
           description_text?: string | null
@@ -132,7 +130,6 @@ export type Database = {
           web_text?: string | null
         }
         Update: {
-          created_by?: string
           created_at?: string
           dates?: string[] | null
           description_text?: string | null
