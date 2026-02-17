@@ -485,39 +485,6 @@ export function ImageCropSection({ show, season }: ImageCropSectionProps) {
         )}
       </div>
 
-      {/* SECTIE 6: ALT-TEKST */}
-      {hasAnyCrops && (
-        <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <Tag className="h-5 w-5 text-primary" />
-            <h3 className="font-semibold text-card-foreground">ALT-tekst</h3>
-          </div>
-
-          <div className="flex gap-2">
-            <Input
-              className="text-sm flex-1"
-              value={altText}
-              onChange={(e) => setAltText(e.target.value)}
-              onBlur={() => handleUpdateAllAltTexts(altText)}
-              placeholder=""
-            />
-            <CopyButton value={altText} />
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-1.5 shrink-0"
-              onClick={handleGenerateAltText}
-              disabled={generatingAlt}
-            >
-              {generatingAlt ? (
-                <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Bezig...</>
-              ) : (
-                <><Sparkles className="h-3.5 w-3.5" /> Genereer met AI</>
-              )}
-            </Button>
-          </div>
-        </div>
-      )}
     </>
   );
 }
