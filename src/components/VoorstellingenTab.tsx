@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef, useMemo, useEffect } from "react";
 import { format, parseISO } from "date-fns";
 import { nl } from "date-fns/locale";
 import {
@@ -18,9 +18,11 @@ import {
 } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
-import type { ShowWithImages, ShowStatus } from "@/lib/showStatus";
+import type { ShowWithImages } from "@/lib/showStatus";
+import type { TablesInsert } from "@/integrations/supabase/types";
 import {
   getChecklist, getProgressPercent, getStatus, getStatusLabel,
+  statusColor, statusTextColor, statusBgLight,
 } from "@/lib/showStatus";
 import {
   useCreateShow, useUpdateShow, useDeleteShow, useDuplicateShow,
@@ -40,30 +42,6 @@ const GENRES = [
   "Dans", "Cultureel initiatief", "Klassieke Muziek", "Show",
   "Toneel", "Theatercollege", "Muziektheater",
 ] as const;
-
-function statusColor(status: ShowStatus) {
-  switch (status) {
-    case "todo": return "bg-status-todo";
-    case "bezig": return "bg-status-busy";
-    case "afgerond": return "bg-status-done";
-  }
-}
-
-function statusTextColor(status: ShowStatus) {
-  switch (status) {
-    case "todo": return "text-status-todo";
-    case "bezig": return "text-status-busy";
-    case "afgerond": return "text-status-done";
-  }
-}
-
-function statusBgLight(status: ShowStatus) {
-  switch (status) {
-    case "todo": return "bg-status-todo/15";
-    case "bezig": return "bg-status-busy/15";
-    case "afgerond": return "bg-status-done/15";
-  }
-}
 
 function formatDate(dateStr: string) {
   try {
@@ -142,12 +120,14 @@ export function VoorstellingenTab({ season, shows, openNewDialog, onNewDialogClo
   const deleteSceneImage = useDeleteSceneImage();
 
   // Open modal from parent
-  if (openNewDialog && !modalOpen) {
-    setModalOpen(true);
-    setEditingShow(null);
-    setForm(emptyForm());
-    onNewDialogClose?.();
-  }
+  useEffect(() => {
+    if (openNewDialog && !modalOpen) {
+      setModalOpen(true);
+      setEditingShow(null);
+      setForm(emptyForm());
+      onNewDialogClose?.();
+    }
+  }, [openNewDialog]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const showsWithStatus = useMemo(() =>
     shows.map((s) => {
@@ -195,7 +175,7 @@ export function VoorstellingenTab({ season, shows, openNewDialog, onNewDialogClo
       toast.error("Vul een titel in");
       return;
     }
-    const payload: any = {
+    const payload: Omit<TablesInsert<"shows">, "season"> = {
       title: form.title.trim(),
       subtitle: form.subtitle.trim() || null,
       dates: form.dates.filter(d => d.trim()),

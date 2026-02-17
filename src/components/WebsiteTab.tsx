@@ -11,10 +11,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { cn } from "@/lib/utils";
+import { cn, toSlug } from "@/lib/utils";
 import type { ShowWithImages } from "@/lib/showStatus";
 import {
   getChecklist, getProgressPercent, getStatus, getStatusLabel,
+  statusColor,
   type ShowChecklist, type ShowStatus,
 } from "@/lib/showStatus";
 import { useUpdateShow } from "@/hooks/useShows";
@@ -28,29 +29,12 @@ interface WebsiteTabProps {
 }
 
 // ─── Helpers ───
-function statusDotColor(status: ShowStatus) {
-  switch (status) {
-    case "todo": return "bg-status-todo";
-    case "bezig": return "bg-status-busy";
-    case "afgerond": return "bg-status-done";
-  }
-}
-
 function formatDateShort(dateStr: string) {
   try {
     return format(parseISO(dateStr), "EEE d MMM yyyy", { locale: nl });
   } catch {
     return dateStr;
   }
-}
-
-function toSlug(title: string, subtitle: string | null) {
-  return [title, subtitle]
-    .filter(Boolean)
-    .join(" ")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
 }
 
 const CHECKLIST_LABELS: Record<keyof ShowChecklist, string> = {
@@ -100,7 +84,8 @@ export function WebsiteTab({ season, shows }: WebsiteTabProps) {
     [eligible, selectedId]
   );
 
-  // Populate fields on selection
+  // Populate fields when a different show is selected
+  const selectedUpdatedAt = selected?.updated_at;
   useEffect(() => {
     if (!selected) return;
     const autoTitle = [selected.title, selected.subtitle, "Stadstheater Zoetermeer"]
@@ -117,11 +102,11 @@ export function WebsiteTab({ season, shows }: WebsiteTabProps) {
     setSeoSlug(selected.seo_slug || autoSlug);
     setWebText(selected.web_text || selected.description_text || "");
     setShowOriginal(false);
-  }, [selected?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [selected?.id, selectedUpdatedAt]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Auto-save with debounce
   const autoSave = useCallback(
-    (fields: Record<string, any>) => {
+    (fields: Partial<Pick<ShowWithImages, "seo_title" | "seo_keyword" | "seo_meta_description" | "seo_slug" | "web_text">>) => {
       if (!selected) return;
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
       saveTimerRef.current = setTimeout(() => {
@@ -161,8 +146,8 @@ export function WebsiteTab({ season, shows }: WebsiteTabProps) {
       setShowOriginal(false);
       autoSave({ web_text: result });
       toast.success("Tekst geoptimaliseerd");
-    } catch (e: any) {
-      toast.error(e.message || "Fout bij optimaliseren");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Fout bij optimaliseren");
     } finally {
       setOptimizing(false);
     }
@@ -238,7 +223,7 @@ export function WebsiteTab({ season, shows }: WebsiteTabProps) {
                     <p className="text-[11px] text-muted-foreground truncate">{show.subtitle}</p>
                   )}
                 </div>
-                <div className={cn("w-2.5 h-2.5 rounded-full shrink-0", statusDotColor(st))} />
+                <div className={cn("w-2.5 h-2.5 rounded-full shrink-0", statusColor(st))} />
               </button>
             );
           })

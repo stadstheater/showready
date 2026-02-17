@@ -6,7 +6,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { cn } from "@/lib/utils";
+import { cn, toSlug } from "@/lib/utils";
 import type { ShowWithImages, ShowImage } from "@/lib/showStatus";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -29,15 +29,6 @@ export const CROP_FORMATS: CropFormat[] = [
   { key: "narrow", label: "Narrow", width: 1650, height: 1080, suffix: "-narrow", description: "Staand formaat", dbType: "crop_narrow" },
   { key: "slider", label: "Slider", width: 1920, height: 1080, suffix: "-slider", description: "Carrousel liggend", dbType: "crop_slider" },
 ];
-
-function toSlug(title: string, subtitle: string | null) {
-  return [title, subtitle]
-    .filter(Boolean)
-    .join(" ")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
 
 function generateFileName(show: ShowWithImages, suffix: string) {
   const slug = toSlug(show.title, show.subtitle);
