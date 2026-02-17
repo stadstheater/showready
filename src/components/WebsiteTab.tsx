@@ -365,27 +365,9 @@ export function WebsiteTab({ season, shows }: WebsiteTabProps) {
                 />
               )}
 
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground">{wordCount} woorden</span>
-                  <CopyButton value={showOriginal ? (selected.description_text || "") : webText} />
-                </div>
-                <Button
-                  size="sm"
-                  onClick={handleOptimize}
-                  disabled={optimizing}
-                  className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
-                >
-                  {optimizing ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" /> Bezig...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="h-4 w-4" /> Optimaliseer tekst
-                    </>
-                  )}
-                </Button>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">{wordCount} woorden</span>
+                <CopyButton value={showOriginal ? (selected.description_text || "") : webText} />
               </div>
             </div>
 
