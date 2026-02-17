@@ -65,7 +65,7 @@ const Index = () => {
       />
 
       {/* Breadcrumb */}
-      <div className="container py-2">
+      <div className="container py-3 flex justify-center">
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
