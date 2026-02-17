@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef, ReactNode } from "react";
 import { format, parseISO } from "date-fns";
 import { nl } from "date-fns/locale";
 import {
@@ -24,6 +24,8 @@ import { toast } from "sonner";
 import { ImageCropSection } from "@/components/ImageCropSection";
 import { CopyButton } from "@/components/CopyButton";
 import { RichTextEditor } from "@/components/RichTextEditor";
+import { SortableList } from "@/components/SortableList";
+import { useSortOrder } from "@/hooks/useSortOrder";
 
 interface WebsiteTabProps {
   season: string;
@@ -184,6 +186,196 @@ export function WebsiteTab({ season, shows }: WebsiteTabProps) {
   const metaLen = seoMeta.length;
   const metaColor = metaLen >= 120 && metaLen <= 160 ? "text-status-done" : "text-status-todo";
 
+  // Section definitions for sortable ordering
+  const SECTION_IDS = ["checklist", "seo", "webtekst", "praktisch", "afbeeldingen"];
+  const { orderedIds: sectionOrder, updateOrder: updateSectionOrder } = useSortOrder(
+    `website-sections`,
+    SECTION_IDS
+  );
+
+  const sectionRenderers: Record<string, (dragHandle: ReactNode) => ReactNode> = {
+    checklist: (dragHandle) => (
+      <Card className="bg-accent/50 border-border">
+        <CardContent className="p-5 space-y-4">
+          <div className="flex items-center gap-2">
+            {dragHandle}
+            <CheckCircle2 className="h-5 w-5 text-primary" />
+            <h3 className="font-semibold text-card-foreground">Checklist</h3>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {checklist &&
+              (Object.entries(checklist) as [keyof ShowChecklist, boolean][]).map(
+                ([key, done]) => (
+                  <div key={key} className="flex items-center gap-2 text-sm">
+                    {done ? (
+                      <Check className="h-4 w-4 text-status-done" />
+                    ) : (
+                      <AlertTriangle className="h-4 w-4 text-status-todo" />
+                    )}
+                    <span className={done ? "text-card-foreground" : "text-muted-foreground"}>
+                      {CHECKLIST_LABELS[key]}
+                    </span>
+                  </div>
+                )
+              )}
+          </div>
+          <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+            <div
+              className="h-full rounded-full bg-primary transition-all"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        </CardContent>
+      </Card>
+    ),
+
+    seo: (dragHandle) => (
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          {dragHandle}
+          <Globe className="h-5 w-5 text-primary" />
+          <h3 className="font-semibold text-card-foreground">SEO & Metadata</h3>
+        </div>
+
+        <div className="space-y-1">
+          <div className="flex items-center gap-1">
+            <Label>Focus zoekwoord</Label>
+            <CopyButton value={seoKeyword} />
+          </div>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              className="pl-9"
+              value={seoKeyword}
+              onChange={(e) => handleSeoKeyword(e.target.value)}
+              placeholder="bijv. cabaret Zoetermeer"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-1">
+          <div className="flex items-center gap-1">
+            <Label>SEO-titel</Label>
+            <CopyButton value={seoTitle} />
+          </div>
+          <Input value={seoTitle} onChange={(e) => handleSeoTitle(e.target.value)} />
+        </div>
+
+        <div className="space-y-1">
+          <div className="flex items-center gap-1">
+            <Label>URL-slug</Label>
+            <CopyButton value={`stadstheaterzoetermeer.nl/${seoSlug}`} />
+          </div>
+          <div className="flex items-center">
+            <span className="text-xs text-muted-foreground px-3 py-2 border border-r-0 border-border rounded-l-md bg-muted">
+              stadstheaterzoetermeer.nl/
+            </span>
+            <Input
+              className="rounded-l-none"
+              value={seoSlug}
+              onChange={(e) => handleSeoSlug(e.target.value)}
+            />
+          </div>
+        </div>
+      </div>
+    ),
+
+    webtekst: (dragHandle) => (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            {dragHandle}
+            <Type className="h-5 w-5 text-primary" />
+            <h3 className="font-semibold text-card-foreground">Webtekst</h3>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="gap-1.5 text-xs"
+            onClick={() => setShowOriginal(!showOriginal)}
+          >
+            {showOriginal ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+            {showOriginal ? "Toon bewerkt" : "Toon origineel"}
+          </Button>
+        </div>
+
+        {showOriginal ? (
+          <div className="rounded-md border border-input bg-background px-3 py-2 text-sm opacity-70 min-h-[120px] prose prose-sm max-w-none"
+            dangerouslySetInnerHTML={{ __html: selected!.description_text || "" }}
+          />
+        ) : (
+          <RichTextEditor
+            value={webText}
+            onChange={(html) => handleWebText(html)}
+          />
+        )}
+
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground">{wordCount} woorden</span>
+          <CopyButton value={showOriginal ? (selected!.description_text || "") : webText} />
+        </div>
+      </div>
+    ),
+
+    praktisch: (dragHandle) => (
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          {dragHandle}
+          <Info className="h-5 w-5 text-primary" />
+          <h3 className="font-semibold text-card-foreground">Praktische info</h3>
+        </div>
+
+        <div className="rounded-lg border border-border bg-accent/30 p-4 font-mono text-xs text-card-foreground space-y-1">
+          {selected!.dates && selected!.dates.length > 0 && (
+            <p>Datum: {selected!.dates.map(formatDateShort).join(", ")}</p>
+          )}
+          {selected!.start_time && (
+            <p>
+              Tijd: {selected!.start_time}
+              {selected!.end_time ? ` – ${selected!.end_time} uur` : ""}
+            </p>
+          )}
+          {selected!.price != null && (
+            <p>
+              Prijs: € {selected!.price.toFixed(2).replace(".", ",")}
+              {selected!.discount_price != null &&
+                ` (korting: € ${selected!.discount_price.toFixed(2).replace(".", ",")})`}
+            </p>
+          )}
+          {selected!.genre && <p>Genre: {selected!.genre}</p>}
+        </div>
+
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-2"
+          onClick={handleCopy}
+        >
+          {copied ? (
+            <>
+              <Check className="h-4 w-4 text-status-done" /> Gekopieerd!
+            </>
+          ) : (
+            <>
+              <ClipboardCopy className="h-4 w-4" /> Kopieer praktische info
+            </>
+          )}
+        </Button>
+      </div>
+    ),
+
+    afbeeldingen: (dragHandle) => (
+      <div>
+        <div className="flex items-center gap-2 mb-4">
+          {dragHandle}
+        </div>
+        <ImageCropSection show={selected!} season={season} />
+      </div>
+    ),
+  };
+
+  const sortableSections = sectionOrder.map((id) => ({ id }));
+
   return (
     <div className="flex h-[calc(100vh-8rem)]">
       {/* ─── LEFT SIDEBAR ─── */}
@@ -254,170 +446,13 @@ export function WebsiteTab({ season, shows }: WebsiteTabProps) {
               </div>
             </div>
 
-            {/* SECTIE 1: CHECKLIST */}
-            <Card className="bg-accent/50 border-border">
-              <CardContent className="p-5 space-y-4">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-primary" />
-                  <h3 className="font-semibold text-card-foreground">Checklist</h3>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  {checklist &&
-                    (Object.entries(checklist) as [keyof ShowChecklist, boolean][]).map(
-                      ([key, done]) => (
-                        <div key={key} className="flex items-center gap-2 text-sm">
-                          {done ? (
-                            <Check className="h-4 w-4 text-status-done" />
-                          ) : (
-                            <AlertTriangle className="h-4 w-4 text-status-todo" />
-                          )}
-                          <span className={done ? "text-card-foreground" : "text-muted-foreground"}>
-                            {CHECKLIST_LABELS[key]}
-                          </span>
-                        </div>
-                      )
-                    )}
-                </div>
-                <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
-                  <div
-                    className="h-full rounded-full bg-primary transition-all"
-                    style={{ width: `${progress}%` }}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* SECTIE 2: SEO & METADATA */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <Globe className="h-5 w-5 text-primary" />
-                <h3 className="font-semibold text-card-foreground">SEO & Metadata</h3>
-              </div>
-
-              <div className="space-y-1">
-                <div className="flex items-center gap-1">
-                  <Label>Focus zoekwoord</Label>
-                  <CopyButton value={seoKeyword} />
-                </div>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    className="pl-9"
-                    value={seoKeyword}
-                    onChange={(e) => handleSeoKeyword(e.target.value)}
-                    placeholder="bijv. cabaret Zoetermeer"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <div className="flex items-center gap-1">
-                  <Label>SEO-titel</Label>
-                  <CopyButton value={seoTitle} />
-                </div>
-                <Input value={seoTitle} onChange={(e) => handleSeoTitle(e.target.value)} />
-              </div>
-
-              <div className="space-y-1">
-                <div className="flex items-center gap-1">
-                  <Label>URL-slug</Label>
-                  <CopyButton value={`stadstheaterzoetermeer.nl/${seoSlug}`} />
-                </div>
-                <div className="flex items-center">
-                  <span className="text-xs text-muted-foreground px-3 py-2 border border-r-0 border-border rounded-l-md bg-muted">
-                    stadstheaterzoetermeer.nl/
-                  </span>
-                  <Input
-                    className="rounded-l-none"
-                    value={seoSlug}
-                    onChange={(e) => handleSeoSlug(e.target.value)}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* SECTIE 3: WEBTEKST */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Type className="h-5 w-5 text-primary" />
-                  <h3 className="font-semibold text-card-foreground">Webtekst</h3>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="gap-1.5 text-xs"
-                  onClick={() => setShowOriginal(!showOriginal)}
-                >
-                  {showOriginal ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                  {showOriginal ? "Toon bewerkt" : "Toon origineel"}
-                </Button>
-              </div>
-
-              {showOriginal ? (
-                <div className="rounded-md border border-input bg-background px-3 py-2 text-sm opacity-70 min-h-[120px] prose prose-sm max-w-none"
-                  dangerouslySetInnerHTML={{ __html: selected.description_text || "" }}
-                />
-              ) : (
-                <RichTextEditor
-                  value={webText}
-                  onChange={(html) => handleWebText(html)}
-                />
-              )}
-
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground">{wordCount} woorden</span>
-                <CopyButton value={showOriginal ? (selected.description_text || "") : webText} />
-              </div>
-            </div>
-
-            {/* SECTIE 4: PRAKTISCHE INFO */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <Info className="h-5 w-5 text-primary" />
-                <h3 className="font-semibold text-card-foreground">Praktische info</h3>
-              </div>
-
-              <div className="rounded-lg border border-border bg-accent/30 p-4 font-mono text-xs text-card-foreground space-y-1">
-                {selected.dates && selected.dates.length > 0 && (
-                  <p>Datum: {selected.dates.map(formatDateShort).join(", ")}</p>
-                )}
-                {selected.start_time && (
-                  <p>
-                    Tijd: {selected.start_time}
-                    {selected.end_time ? ` – ${selected.end_time} uur` : ""}
-                  </p>
-                )}
-                {selected.price != null && (
-                  <p>
-                    Prijs: € {selected.price.toFixed(2).replace(".", ",")}
-                    {selected.discount_price != null &&
-                      ` (korting: € ${selected.discount_price.toFixed(2).replace(".", ",")})`}
-                  </p>
-                )}
-                {selected.genre && <p>Genre: {selected.genre}</p>}
-              </div>
-
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2"
-                onClick={handleCopy}
-              >
-                {copied ? (
-                  <>
-                    <Check className="h-4 w-4 text-status-done" /> Gekopieerd!
-                  </>
-                ) : (
-                  <>
-                    <ClipboardCopy className="h-4 w-4" /> Kopieer praktische info
-                  </>
-                )}
-              </Button>
-            </div>
-
-            {/* SECTIE 5 & 6: AFBEELDINGEN & ALT-TEKSTEN */}
-            <ImageCropSection show={selected} season={season} />
+            {/* Sortable sections */}
+            <SortableList
+              items={sortableSections}
+              onReorder={(newItems) => updateSectionOrder(newItems.map((i) => i.id))}
+              className="space-y-6"
+              renderItem={(item, dragHandle) => sectionRenderers[item.id]?.(dragHandle) || null}
+            />
           </>
         )}
       </div>
