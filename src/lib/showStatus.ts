@@ -9,7 +9,7 @@ export interface ShowChecklist {
   cropHero: boolean;
   cropUitlichten: boolean;
   cropNarrow: boolean;
-  cropSlider: boolean;
+  
 }
 
 export interface ShowImage {
@@ -63,7 +63,7 @@ export function getChecklist(show: ShowWithImages): ShowChecklist {
     cropHero: images.some(i => i.type === "crop_hero"),
     cropUitlichten: images.some(i => i.type === "crop_uitlichten"),
     cropNarrow: images.some(i => i.type === "crop_narrow"),
-    cropSlider: images.some(i => i.type === "crop_slider"),
+    
   };
 }
 
