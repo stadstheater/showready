@@ -1,9 +1,11 @@
-import { useState, useRef, useMemo, useEffect } from "react";
+import { useState, useRef, useMemo, useEffect, ReactNode } from "react";
 import { format, parseISO } from "date-fns";
 import { nl } from "date-fns/locale";
 import {
   Plus, Trash2, Image, Search, Edit3, Copy, LayoutGrid, X, Upload, Calendar, Euro, Tag,
 } from "lucide-react";
+import { SortableList } from "@/components/SortableList";
+import { useSortOrder } from "@/hooks/useSortOrder";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -18,7 +20,7 @@ import {
 } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
-import type { ShowWithImages } from "@/lib/showStatus";
+import type { ShowWithImages, ShowImage } from "@/lib/showStatus";
 import type { TablesInsert } from "@/integrations/supabase/types";
 import {
   getChecklist, getProgressPercent, getStatus, getStatusLabel,
@@ -100,6 +102,246 @@ function showToForm(show: ShowWithImages): FormState {
   };
 }
 
+// ─── Sortable form fields ───
+interface FormFieldsSortableProps {
+  form: FormState;
+  setForm: React.Dispatch<React.SetStateAction<FormState>>;
+  editingShow: ShowWithImages | null;
+  season: string;
+  heroInputRef: React.RefObject<HTMLInputElement>;
+  sceneInputRef: React.RefObject<HTMLInputElement>;
+  textInputRef: React.RefObject<HTMLInputElement>;
+  heroUploading: boolean;
+  sceneUploading: boolean;
+  handleHeroUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handleRemoveHero: () => void;
+  handleSceneUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handleDeleteScene: (id: string, url: string) => void;
+  handleTextUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  setDateAt: (index: number, val: string) => void;
+  addDate: () => void;
+  removeDate: (index: number) => void;
+  sceneImages: ShowImage[];
+}
+
+function FormFieldsSortable(props: FormFieldsSortableProps) {
+  const {
+    form, setForm, editingShow, season,
+    heroInputRef, sceneInputRef, textInputRef,
+    heroUploading, sceneUploading,
+    handleHeroUpload, handleRemoveHero, handleSceneUpload, handleDeleteScene, handleTextUpload,
+    setDateAt, addDate, removeDate, sceneImages,
+  } = props;
+
+  const FIELD_IDS = ["title", "subtitle", "dates", "times", "prices", "genre", "description", "hero", ...(editingShow ? ["scenes"] : []), "notes"];
+  const { orderedIds: fieldOrder, updateOrder: updateFieldOrder } = useSortOrder(
+    "voorstellingen-form-fields",
+    FIELD_IDS
+  );
+
+  const fieldRenderers: Record<string, (dragHandle: ReactNode) => ReactNode> = {
+    title: (dh) => (
+      <div className="space-y-1">
+        <div className="flex items-center gap-1">{dh}<Label>Titel *</Label></div>
+        <Input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="Bijv. Jan Smit" />
+      </div>
+    ),
+    subtitle: (dh) => (
+      <div className="space-y-1">
+        <div className="flex items-center gap-1">{dh}<Label>Ondertitel</Label></div>
+        <Input value={form.subtitle} onChange={e => setForm(f => ({ ...f, subtitle: e.target.value }))} placeholder="Bijv. In Concert" />
+      </div>
+    ),
+    dates: (dh) => (
+      <div className="space-y-2">
+        <div className="flex items-center gap-1">{dh}<Label>Datum(s)</Label></div>
+        {form.dates.map((d, i) => (
+          <div key={i} className="flex items-center gap-2">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !d && "text-muted-foreground")}>
+                  <Calendar className="mr-2 h-4 w-4" />
+                  {d ? formatDate(d) : "Kies een datum"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <CalendarComponent
+                  mode="single"
+                  selected={d ? parseISO(d) : undefined}
+                  onSelect={(date) => { if (date) setDateAt(i, format(date, "yyyy-MM-dd")); }}
+                  className="p-3 pointer-events-auto"
+                />
+              </PopoverContent>
+            </Popover>
+            {form.dates.length > 1 && (
+              <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => removeDate(i)}>
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        ))}
+        <Button variant="link" className="h-auto p-0 text-primary text-sm" onClick={addDate}>
+          + Datum toevoegen
+        </Button>
+      </div>
+    ),
+    times: (dh) => (
+      <div className="space-y-1">
+        <div className="flex items-center gap-1">{dh}<Label>Tijden</Label></div>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-1">
+            <Label className="text-xs text-muted-foreground">Begintijd</Label>
+            <Input type="time" value={form.start_time} onChange={e => setForm(f => ({ ...f, start_time: e.target.value }))} />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs text-muted-foreground">Eindtijd</Label>
+            <Input type="time" value={form.end_time} onChange={e => setForm(f => ({ ...f, end_time: e.target.value }))} />
+          </div>
+        </div>
+      </div>
+    ),
+    prices: (dh) => (
+      <div className="space-y-1">
+        <div className="flex items-center gap-1">{dh}<Label>Prijzen</Label></div>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-1">
+            <Label className="text-xs text-muted-foreground">Ticketprijs</Label>
+            <div className="relative">
+              <Euro className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input type="number" step="0.01" min="0" className="pl-9"
+                value={form.price} onChange={e => setForm(f => ({ ...f, price: e.target.value }))} />
+            </div>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs text-muted-foreground">Kortingsprijs</Label>
+            <div className="relative">
+              <Euro className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input type="number" step="0.01" min="0" className="pl-9"
+                value={form.discount_price} onChange={e => setForm(f => ({ ...f, discount_price: e.target.value }))} />
+            </div>
+          </div>
+        </div>
+      </div>
+    ),
+    genre: (dh) => (
+      <div className="space-y-1">
+        <div className="flex items-center gap-1">{dh}<Label>Genre</Label></div>
+        <Select value={form.genre} onValueChange={v => setForm(f => ({ ...f, genre: v }))}>
+          <SelectTrigger><SelectValue placeholder="Kies een genre" /></SelectTrigger>
+          <SelectContent>
+            {GENRES.map(g => <SelectItem key={g} value={g}>{g}</SelectItem>)}
+          </SelectContent>
+        </Select>
+      </div>
+    ),
+    description: (dh) => (
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
+          {dh}
+          <Label>Beschrijving</Label>
+          {form.text_filename && <span className="text-xs text-status-done">{form.text_filename}</span>}
+        </div>
+        <RichTextEditor
+          value={form.description_text}
+          onChange={(html) => setForm(f => ({ ...f, description_text: html }))}
+          placeholder="Plak of typ hier de beschrijving..."
+        />
+        <input ref={textInputRef} type="file" accept=".txt,.pdf,.docx" className="hidden" onChange={handleTextUpload} />
+        <Button variant="outline" size="sm" onClick={() => textInputRef.current?.click()} className="gap-2">
+          <Upload className="h-4 w-4" /> Tekst importeren uit bestand
+        </Button>
+      </div>
+    ),
+    hero: (dh) => (
+      <div className="space-y-2">
+        <div className="flex items-center gap-1">{dh}<Label>Voorstellingsbeeld *</Label></div>
+        <input ref={heroInputRef} type="file" accept="image/*" className="hidden" onChange={handleHeroUpload} />
+        {form.hero_image_url ? (
+          <div className="relative group/hero">
+            <img src={form.hero_image_url} alt="Hero" className="w-full h-48 object-cover rounded-lg" />
+            <Button
+              variant="destructive"
+              size="icon"
+              className="absolute top-2 right-2 h-7 w-7 opacity-0 group-hover/hero:opacity-100 transition-opacity"
+              onClick={handleRemoveHero}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        ) : (
+          <button
+            onClick={() => heroInputRef.current?.click()}
+            disabled={heroUploading}
+            className="w-full h-32 border-2 border-dashed border-border rounded-lg flex flex-col items-center justify-center gap-2 text-muted-foreground hover:border-primary/50 transition-colors"
+          >
+            {heroUploading ? (
+              <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            ) : (
+              <>
+                <Image className="h-8 w-8" />
+                <span className="text-sm">Klik om afbeelding te uploaden</span>
+              </>
+            )}
+          </button>
+        )}
+      </div>
+    ),
+    scenes: (dh) => editingShow ? (
+      <div className="space-y-2">
+        <div className="flex items-center gap-1">{dh}<Label>Scenefoto's</Label></div>
+        <input ref={sceneInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleSceneUpload} />
+        <div className="grid grid-cols-4 gap-2">
+          {sceneImages.map(img => (
+            <div key={img.id} className="relative group/scene h-20 rounded-lg overflow-hidden bg-muted">
+              <img src={img.file_url} alt={img.alt_text || ""} className="h-full w-full object-cover" />
+              <Button
+                variant="destructive"
+                size="icon"
+                className="absolute top-1 right-1 h-5 w-5 opacity-0 group-hover/scene:opacity-100 transition-opacity"
+                onClick={() => handleDeleteScene(img.id, img.file_url)}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            </div>
+          ))}
+          <button
+            onClick={() => sceneInputRef.current?.click()}
+            disabled={sceneUploading}
+            className="h-20 border-2 border-dashed border-border rounded-lg flex items-center justify-center text-muted-foreground hover:border-primary/50 transition-colors"
+          >
+            {sceneUploading ? (
+              <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            ) : (
+              <Plus className="h-6 w-6" />
+            )}
+          </button>
+        </div>
+      </div>
+    ) : null,
+    notes: (dh) => (
+      <div className="space-y-1">
+        <div className="flex items-center gap-1">{dh}<Label>Notities</Label></div>
+        <Textarea
+          value={form.notes}
+          onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
+          rows={2}
+          placeholder="Bijv. 'Wacht nog op beeld van impresariaat'"
+        />
+      </div>
+    ),
+  };
+
+  const sortableFields = fieldOrder.map((id) => ({ id }));
+
+  return (
+    <SortableList
+      items={sortableFields}
+      onReorder={(newItems) => updateFieldOrder(newItems.map((i) => i.id))}
+      className="space-y-5"
+      renderItem={(item, dragHandle) => fieldRenderers[item.id]?.(dragHandle) || null}
+    />
+  );
+}
 export function VoorstellingenTab({ season, shows, openNewDialog, onNewDialogClose }: VoorstellingenTabProps) {
   const [search, setSearch] = useState("");
   const [genreFilter, setGenreFilter] = useState("all");
@@ -469,195 +711,26 @@ export function VoorstellingenTab({ season, shows, openNewDialog, onNewDialogClo
               {/* Season badge */}
               <Badge className="bg-primary text-primary-foreground text-xs">{season}</Badge>
 
-              {/* Title */}
-              <div className="space-y-1">
-                <Label>Titel *</Label>
-                <Input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="Bijv. Jan Smit" />
-              </div>
-
-              {/* Subtitle */}
-              <div className="space-y-1">
-                <Label>Ondertitel</Label>
-                <Input value={form.subtitle} onChange={e => setForm(f => ({ ...f, subtitle: e.target.value }))} placeholder="Bijv. In Concert" />
-              </div>
-
-              {/* Dates */}
-              <div className="space-y-2">
-                <Label>Datum(s)</Label>
-                {form.dates.map((d, i) => (
-                  <div key={i} className="flex items-center gap-2">
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !d && "text-muted-foreground")}>
-                          <Calendar className="mr-2 h-4 w-4" />
-                          {d ? formatDate(d) : "Kies een datum"}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <CalendarComponent
-                          mode="single"
-                          selected={d ? parseISO(d) : undefined}
-                          onSelect={(date) => {
-                            if (date) setDateAt(i, format(date, "yyyy-MM-dd"));
-                          }}
-                          className="p-3 pointer-events-auto"
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    {form.dates.length > 1 && (
-                      <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => removeDate(i)}>
-                        <X className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                ))}
-                <Button variant="link" className="h-auto p-0 text-primary text-sm" onClick={addDate}>
-                  + Datum toevoegen
-                </Button>
-              </div>
-
-              {/* Times */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <Label>Begintijd</Label>
-                  <Input type="time" value={form.start_time} onChange={e => setForm(f => ({ ...f, start_time: e.target.value }))} />
-                </div>
-                <div className="space-y-1">
-                  <Label>Eindtijd</Label>
-                  <Input type="time" value={form.end_time} onChange={e => setForm(f => ({ ...f, end_time: e.target.value }))} />
-                </div>
-              </div>
-
-              {/* Prices */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <Label>Ticketprijs</Label>
-                  <div className="relative">
-                    <Euro className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input type="number" step="0.01" min="0" className="pl-9"
-                      value={form.price} onChange={e => setForm(f => ({ ...f, price: e.target.value }))}
-                    />
-                  </div>
-                </div>
-                <div className="space-y-1">
-                  <Label>Kortingsprijs</Label>
-                  <div className="relative">
-                    <Euro className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input type="number" step="0.01" min="0" className="pl-9"
-                      value={form.discount_price} onChange={e => setForm(f => ({ ...f, discount_price: e.target.value }))}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Genre */}
-              <div className="space-y-1">
-                <Label>Genre</Label>
-                <Select value={form.genre} onValueChange={v => setForm(f => ({ ...f, genre: v }))}>
-                  <SelectTrigger><SelectValue placeholder="Kies een genre" /></SelectTrigger>
-                  <SelectContent>
-                    {GENRES.map(g => <SelectItem key={g} value={g}>{g}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Description */}
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <Label>Beschrijving</Label>
-                  {form.text_filename && (
-                    <span className="text-xs text-status-done">{form.text_filename}</span>
-                  )}
-                </div>
-                <RichTextEditor
-                  value={form.description_text}
-                  onChange={(html) => setForm(f => ({ ...f, description_text: html }))}
-                  placeholder="Plak of typ hier de beschrijving..."
-                />
-                <input ref={textInputRef} type="file" accept=".txt,.pdf,.docx" className="hidden" onChange={handleTextUpload} />
-                <Button variant="outline" size="sm" onClick={() => textInputRef.current?.click()} className="gap-2">
-                  <Upload className="h-4 w-4" /> Tekst importeren uit bestand
-                </Button>
-              </div>
-
-              {/* Hero image */}
-              <div className="space-y-2">
-                <Label>Voorstellingsbeeld *</Label>
-                <input ref={heroInputRef} type="file" accept="image/*" className="hidden" onChange={handleHeroUpload} />
-                {form.hero_image_url ? (
-                  <div className="relative group/hero">
-                    <img src={form.hero_image_url} alt="Hero" className="w-full h-48 object-cover rounded-lg" />
-                    <Button
-                      variant="destructive"
-                      size="icon"
-                      className="absolute top-2 right-2 h-7 w-7 opacity-0 group-hover/hero:opacity-100 transition-opacity"
-                      onClick={handleRemoveHero}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => heroInputRef.current?.click()}
-                    disabled={heroUploading}
-                    className="w-full h-32 border-2 border-dashed border-border rounded-lg flex flex-col items-center justify-center gap-2 text-muted-foreground hover:border-primary/50 transition-colors"
-                  >
-                    {heroUploading ? (
-                      <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                    ) : (
-                      <>
-                        <Image className="h-8 w-8" />
-                        <span className="text-sm">Klik om afbeelding te uploaden</span>
-                      </>
-                    )}
-                  </button>
-                )}
-              </div>
-
-              {/* Scene photos (only when editing) */}
-              {editingShow && (
-                <div className="space-y-2">
-                  <Label>Scenefoto's</Label>
-                  <input ref={sceneInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleSceneUpload} />
-                  <div className="grid grid-cols-4 gap-2">
-                    {sceneImages.map(img => (
-                      <div key={img.id} className="relative group/scene h-20 rounded-lg overflow-hidden bg-muted">
-                        <img src={img.file_url} alt={img.alt_text || ""} className="h-full w-full object-cover" />
-                        <Button
-                          variant="destructive"
-                          size="icon"
-                          className="absolute top-1 right-1 h-5 w-5 opacity-0 group-hover/scene:opacity-100 transition-opacity"
-                          onClick={() => handleDeleteScene(img.id, img.file_url)}
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    ))}
-                    <button
-                      onClick={() => sceneInputRef.current?.click()}
-                      disabled={sceneUploading}
-                      className="h-20 border-2 border-dashed border-border rounded-lg flex items-center justify-center text-muted-foreground hover:border-primary/50 transition-colors"
-                    >
-                      {sceneUploading ? (
-                        <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                      ) : (
-                        <Plus className="h-6 w-6" />
-                      )}
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Notes */}
-              <div className="space-y-1">
-                <Label>Notities</Label>
-                <Textarea
-                  value={form.notes}
-                  onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
-                  rows={2}
-                  placeholder="Bijv. 'Wacht nog op beeld van impresariaat'"
-                />
-              </div>
+              <FormFieldsSortable
+                form={form}
+                setForm={setForm}
+                editingShow={editingShow}
+                season={season}
+                heroInputRef={heroInputRef}
+                sceneInputRef={sceneInputRef}
+                textInputRef={textInputRef}
+                heroUploading={heroUploading}
+                sceneUploading={sceneUploading}
+                handleHeroUpload={handleHeroUpload}
+                handleRemoveHero={handleRemoveHero}
+                handleSceneUpload={handleSceneUpload}
+                handleDeleteScene={handleDeleteScene}
+                handleTextUpload={handleTextUpload}
+                setDateAt={setDateAt}
+                addDate={addDate}
+                removeDate={removeDate}
+                sceneImages={sceneImages}
+              />
             </div>
 
             {/* Footer */}

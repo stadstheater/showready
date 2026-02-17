@@ -1,5 +1,7 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, ReactNode } from "react";
 import { Settings, Plus, X } from "lucide-react";
+import { SortableList } from "@/components/SortableList";
+import { useSortOrder } from "@/hooks/useSortOrder";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -71,17 +73,17 @@ export function SettingsTab({ season, showCount }: SettingsTabProps) {
     save("genres", genres.filter((g) => g !== genre));
   };
 
-  return (
-    <div className="container max-w-2xl py-8 space-y-6">
-      <div className="flex items-center gap-2 mb-2">
-        <Settings className="h-5 w-5 text-muted-foreground" />
-        <h2 className="text-lg font-semibold">Instellingen</h2>
-      </div>
+  const SETTINGS_SECTIONS = ["season", "ai", "genres", "times", "info"];
+  const { orderedIds: sectionOrder, updateOrder: updateSectionOrder } = useSortOrder(
+    "settings-sections",
+    SETTINGS_SECTIONS
+  );
 
-      {/* Standaard seizoen */}
+  const sectionRenderers: Record<string, (dragHandle: ReactNode) => ReactNode> = {
+    season: (dragHandle) => (
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Standaard seizoen</CardTitle>
+          <CardTitle className="text-base flex items-center gap-2">{dragHandle} Standaard seizoen</CardTitle>
           <CardDescription>Het seizoen dat standaard wordt geladen bij het openen van de app.</CardDescription>
         </CardHeader>
         <CardContent>
@@ -99,11 +101,12 @@ export function SettingsTab({ season, showCount }: SettingsTabProps) {
           </Select>
         </CardContent>
       </Card>
+    ),
 
-      {/* AI-instellingen */}
+    ai: (dragHandle) => (
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">AI-instellingen</CardTitle>
+          <CardTitle className="text-base flex items-center gap-2">{dragHandle} AI-instellingen</CardTitle>
           <CardDescription>Model en woordlimiet voor automatische tekstoptimalisatie.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -135,11 +138,12 @@ export function SettingsTab({ season, showCount }: SettingsTabProps) {
           </div>
         </CardContent>
       </Card>
+    ),
 
-      {/* Genres */}
+    genres: (dragHandle) => (
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Genres</CardTitle>
+          <CardTitle className="text-base flex items-center gap-2">{dragHandle} Genres</CardTitle>
           <CardDescription>Beheer de genres die beschikbaar zijn bij voorstellingen.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -171,11 +175,12 @@ export function SettingsTab({ season, showCount }: SettingsTabProps) {
           </div>
         </CardContent>
       </Card>
+    ),
 
-      {/* Standaard tijden */}
+    times: (dragHandle) => (
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Standaard tijden</CardTitle>
+          <CardTitle className="text-base flex items-center gap-2">{dragHandle} Standaard tijden</CardTitle>
           <CardDescription>Worden als standaard ingevuld bij nieuwe voorstellingen.</CardDescription>
         </CardHeader>
         <CardContent className="flex gap-4">
@@ -199,11 +204,12 @@ export function SettingsTab({ season, showCount }: SettingsTabProps) {
           </div>
         </CardContent>
       </Card>
+    ),
 
-      {/* Info */}
+    info: (dragHandle) => (
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Info</CardTitle>
+          <CardTitle className="text-base flex items-center gap-2">{dragHandle} Info</CardTitle>
         </CardHeader>
         <CardContent className="space-y-1 text-sm text-muted-foreground">
           <p>Huidig seizoen: {season}</p>
@@ -211,6 +217,24 @@ export function SettingsTab({ season, showCount }: SettingsTabProps) {
           <p>App versie: 1.0.0</p>
         </CardContent>
       </Card>
+    ),
+  };
+
+  const sortableSections = sectionOrder.map((id) => ({ id }));
+
+  return (
+    <div className="container max-w-2xl py-8 space-y-6">
+      <div className="flex items-center gap-2 mb-2">
+        <Settings className="h-5 w-5 text-muted-foreground" />
+        <h2 className="text-lg font-semibold">Instellingen</h2>
+      </div>
+
+      <SortableList
+        items={sortableSections}
+        onReorder={(newItems) => updateSectionOrder(newItems.map((i) => i.id))}
+        className="space-y-6"
+        renderItem={(item, dragHandle) => sectionRenderers[item.id]?.(dragHandle) || null}
+      />
     </div>
   );
 }
