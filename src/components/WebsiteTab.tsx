@@ -30,6 +30,7 @@ import { useSortOrder } from "@/hooks/useSortOrder";
 interface WebsiteTabProps {
   season: string;
   shows: ShowWithImages[];
+  onSelectedShowChange?: (name: string | null) => void;
 }
 
 // ─── Helpers ───
@@ -56,7 +57,7 @@ const CHECKLIST_LABELS: Record<keyof ShowChecklist, string> = {
   
 };
 
-export function WebsiteTab({ season, shows }: WebsiteTabProps) {
+export function WebsiteTab({ season, shows, onSelectedShowChange }: WebsiteTabProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [seoTitle, setSeoTitle] = useState("");
   const [seoKeyword, setSeoKeyword] = useState("");
@@ -88,6 +89,11 @@ export function WebsiteTab({ season, shows }: WebsiteTabProps) {
     [eligible, selectedId]
   );
 
+  // Notify parent of selected show name
+  useEffect(() => {
+    onSelectedShowChange?.(selected?.title || null);
+  }, [selected?.title, onSelectedShowChange]);
+
   // Populate fields when a different show is selected
   const selectedUpdatedAt = selected?.updated_at;
   useEffect(() => {
@@ -107,6 +113,42 @@ export function WebsiteTab({ season, shows }: WebsiteTabProps) {
     setWebText(selected.web_text || selected.description_text || "");
     setShowOriginal(false);
   }, [selected?.id, selectedUpdatedAt]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ─── Keyboard shortcuts ───
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl+S / Cmd+S to force save
+      if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+        e.preventDefault();
+        if (selected) {
+          updateShow.mutate({
+            id: selected.id,
+            seo_title: seoTitle,
+            seo_keyword: seoKeyword,
+            seo_meta_description: seoMeta,
+            seo_slug: seoSlug,
+            web_text: webText,
+          });
+          toast.success("Opgeslagen");
+        }
+      }
+      // Arrow keys to navigate shows in sidebar
+      if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+        // Only when not focused in an input/textarea
+        const tag = (e.target as HTMLElement)?.tagName;
+        if (tag === "INPUT" || tag === "TEXTAREA" || (e.target as HTMLElement)?.isContentEditable) return;
+        e.preventDefault();
+        const currentIndex = eligible.findIndex((s) => s.id === selectedId);
+        if (e.key === "ArrowUp" && currentIndex > 0) {
+          setSelectedId(eligible[currentIndex - 1].id);
+        } else if (e.key === "ArrowDown" && currentIndex < eligible.length - 1) {
+          setSelectedId(eligible[currentIndex + 1].id);
+        }
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selected, selectedId, eligible, seoTitle, seoKeyword, seoMeta, seoSlug, webText, updateShow]);
 
   // Auto-save with debounce
   const autoSave = useCallback(
@@ -380,9 +422,10 @@ export function WebsiteTab({ season, shows }: WebsiteTabProps) {
     <div className="flex h-[calc(100vh-8rem)]">
       {/* ─── LEFT SIDEBAR ─── */}
       <div className="w-72 shrink-0 border-r border-border overflow-y-auto p-4 space-y-2">
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
           Voorstellingen ({eligible.length})
         </p>
+        <p className="text-[10px] text-muted-foreground mb-3">↑↓ om te navigeren · ⌘S om op te slaan</p>
         {eligible.length === 0 ? (
           <p className="text-xs text-muted-foreground">
             Geen voorstellingen met voldoende gegevens — vul titel, datum en afbeelding in
