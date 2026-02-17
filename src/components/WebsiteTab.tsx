@@ -98,10 +98,10 @@ export function WebsiteTab({ season, shows }: WebsiteTabProps) {
     const autoMeta = selected.description_text
       ? selected.description_text.slice(0, 155) + (selected.description_text.length > 155 ? "..." : "")
       : "";
-    const autoSlug = toSlug(selected.title, selected.subtitle);
+    const autoSlug = toSlug(selected.title, null);
 
     setSeoTitle(selected.seo_title || autoTitle);
-    setSeoKeyword(selected.seo_keyword || "");
+    setSeoKeyword(selected.seo_keyword || selected.title);
     setSeoMeta(selected.seo_meta_description || autoMeta);
     setSeoSlug(selected.seo_slug || autoSlug);
     setWebText(selected.web_text || selected.description_text || "");
