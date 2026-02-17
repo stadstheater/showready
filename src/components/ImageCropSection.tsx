@@ -86,6 +86,7 @@ interface ImageCropSectionProps {
 
 export function ImageCropSection({ show, season }: ImageCropSectionProps) {
   const [activeCrop, setActiveCrop] = useState<CropFormat | null>(null);
+  const [cropSourceUrl, setCropSourceUrl] = useState<string | null>(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
@@ -96,6 +97,7 @@ export function ImageCropSection({ show, season }: ImageCropSectionProps) {
   const queryClient = useQueryClient();
 
   const images = show.show_images || [];
+  const sceneImages = images.filter((i) => i.type === "scene");
 
   // Initialize alt text from first existing crop image
   if (!altInitialized && images.length > 0) {
@@ -113,8 +115,9 @@ export function ImageCropSection({ show, season }: ImageCropSectionProps) {
     setCroppedAreaPixels(croppedPixels);
   }, []);
 
-  const handleStartCrop = (fmt: CropFormat) => {
+  const handleStartCrop = (fmt: CropFormat, sourceUrl?: string) => {
     setActiveCrop(fmt);
+    setCropSourceUrl(sourceUrl || show.hero_image_url || null);
     setCrop({ x: 0, y: 0 });
     setZoom(1);
     setCroppedAreaPixels(null);
@@ -122,14 +125,15 @@ export function ImageCropSection({ show, season }: ImageCropSectionProps) {
 
   const handleCancel = () => {
     setActiveCrop(null);
+    setCropSourceUrl(null);
   };
 
   const handleConfirm = async () => {
-    if (!activeCrop || !croppedAreaPixels || !show.hero_image_url) return;
+    if (!activeCrop || !croppedAreaPixels || !cropSourceUrl) return;
     setSaving(true);
     try {
       const blob = await getCroppedBlob(
-        show.hero_image_url,
+        cropSourceUrl,
         croppedAreaPixels,
         activeCrop.width,
         activeCrop.height,
@@ -166,6 +170,7 @@ export function ImageCropSection({ show, season }: ImageCropSectionProps) {
       queryClient.invalidateQueries({ queryKey: ["shows", season] });
       toast.success(`${activeCrop.label} crop opgeslagen`);
       setActiveCrop(null);
+      setCropSourceUrl(null);
     } catch (e: any) {
       toast.error(e.message || "Fout bij opslaan crop");
     } finally {
@@ -199,7 +204,7 @@ export function ImageCropSection({ show, season }: ImageCropSectionProps) {
 
   const handleUpdateAllAltTexts = async (newAltText: string) => {
     const cropImageIds = images
-      .filter((i) => CROP_FORMATS.some((f) => f.dbType === i.type))
+      .filter((i) => CROP_FORMATS.some((f) => f.dbType === i.type) || i.type.startsWith("crop_scene_"))
       .map((i) => i.id);
     if (cropImageIds.length === 0) return;
     await supabase.from("show_images").update({ alt_text: newAltText }).in("id", cropImageIds);
@@ -238,6 +243,16 @@ export function ImageCropSection({ show, season }: ImageCropSectionProps) {
   }));
 
   const hasCrops = cropImages.some((c) => c.img);
+
+  // Build scene crop items
+  const sceneCropItems = sceneImages.map((sceneImg, index) => {
+    const num = index + 1;
+    const dbType = `crop_scene_${num}`;
+    const cropImg = getCropImage(dbType);
+    return { sceneImg, num, dbType, cropImg };
+  });
+
+  const hasAnyCrops = hasCrops || sceneCropItems.some((s) => s.cropImg);
 
   return (
     <>
@@ -315,6 +330,91 @@ export function ImageCropSection({ show, season }: ImageCropSectionProps) {
           ))}
         </div>
 
+        {/* Scene photo crops */}
+        {sceneImages.length > 0 && (
+          <>
+            <h4 className="text-sm font-medium text-card-foreground mt-2">Scenefoto crops (1920 × 1080)</h4>
+            <div className="grid grid-cols-2 gap-3">
+              {sceneCropItems.map(({ sceneImg, num, dbType, cropImg }) => (
+                <div
+                  key={dbType}
+                  className="rounded-lg border border-border bg-accent/30 p-3 space-y-2"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-card-foreground flex items-center gap-1.5">
+                        Scenefoto {num}
+                        {cropImg && <Check className="h-3.5 w-3.5 text-status-done" />}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground">
+                        1920 × 1080 — 16:9 liggend
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Source thumbnail */}
+                  <img
+                    src={sceneImg.file_url}
+                    alt={sceneImg.alt_text || ""}
+                    className="w-full h-14 object-cover rounded opacity-60"
+                  />
+
+                  {cropImg ? (
+                    <>
+                      <img
+                        src={cropImg.file_url}
+                        alt={cropImg.alt_text || ""}
+                        className="w-full h-20 object-cover rounded"
+                      />
+                      <div className="flex items-center gap-1">
+                        <p className="text-[10px] text-muted-foreground truncate flex-1">{cropImg.file_name}</p>
+                        <CopyButton value={cropImg.file_name || ""} className="h-5 w-5" />
+                      </div>
+                      {cropImg.file_size && (
+                        <p className="text-[10px] text-muted-foreground">
+                          {(cropImg.file_size / 1024).toFixed(0)} KB
+                        </p>
+                      )}
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-xs gap-1 flex-1"
+                          onClick={() => handleDownload(cropImg)}
+                        >
+                          <Download className="h-3 w-3" /> Download
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-xs gap-1 flex-1"
+                          onClick={() => handleStartCrop(
+                            { key: dbType, label: `Scenefoto ${num}`, width: 1920, height: 1080, suffix: `-scenefoto-${num}`, description: "16:9 liggend", dbType },
+                            sceneImg.file_url,
+                          )}
+                        >
+                          <RefreshCw className="h-3 w-3" /> Opnieuw
+                        </Button>
+                      </div>
+                    </>
+                  ) : (
+                    <button
+                      onClick={() => handleStartCrop(
+                        { key: dbType, label: `Scenefoto ${num}`, width: 1920, height: 1080, suffix: `-scenefoto-${num}`, description: "16:9 liggend", dbType },
+                        sceneImg.file_url,
+                      )}
+                      className="w-full h-16 border-2 border-dashed border-border rounded flex flex-col items-center justify-center gap-1 text-muted-foreground hover:border-primary/50 transition-colors"
+                    >
+                      <Scissors className="h-5 w-5" />
+                      <span className="text-xs">Crop maken</span>
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
         {/* Download all */}
         {hasCrops && (
           <Button
@@ -327,7 +427,7 @@ export function ImageCropSection({ show, season }: ImageCropSectionProps) {
         )}
 
         {/* CROP TOOL */}
-        {activeCrop && show.hero_image_url && (
+        {activeCrop && cropSourceUrl && (
           <div className="rounded-xl border border-border bg-card p-4 space-y-3">
             <div className="flex items-center justify-between">
               <p className="text-sm font-semibold text-card-foreground">
@@ -350,7 +450,7 @@ export function ImageCropSection({ show, season }: ImageCropSectionProps) {
 
             <div className="relative w-full h-80 bg-background rounded-lg overflow-hidden">
               <Cropper
-                image={show.hero_image_url}
+                image={cropSourceUrl}
                 crop={crop}
                 zoom={zoom}
                 aspect={activeCrop.width / activeCrop.height}
@@ -386,7 +486,7 @@ export function ImageCropSection({ show, season }: ImageCropSectionProps) {
       </div>
 
       {/* SECTIE 6: ALT-TEKST */}
-      {hasCrops && (
+      {hasAnyCrops && (
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             <Tag className="h-5 w-5 text-primary" />
