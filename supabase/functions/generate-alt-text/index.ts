@@ -25,8 +25,9 @@ serve(async (req) => {
       global: { headers: { authorization: authHeader } },
     });
 
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) {
+    const token = authHeader.replace("Bearer ", "");
+    const { data, error: claimsError } = await supabase.auth.getClaims(token);
+    if (claimsError || !data?.claims) {
       return new Response(
         JSON.stringify({ error: "Ongeldige sessie." }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
