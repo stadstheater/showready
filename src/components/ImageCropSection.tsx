@@ -404,7 +404,7 @@ export function ImageCropSection({ show, season }: ImageCropSectionProps) {
               value={altText}
               onChange={(e) => setAltText(e.target.value)}
               onBlur={() => handleUpdateAllAltTexts(altText)}
-              placeholder="Beschrijvende alt-tekst voor alle afbeeldingen..."
+              placeholder=""
             />
             <CopyButton value={altText} />
             <Button
