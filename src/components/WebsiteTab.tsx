@@ -295,14 +295,6 @@ export function WebsiteTab({ season, shows }: WebsiteTabProps) {
 
               <div className="space-y-1">
                 <div className="flex items-center gap-1">
-                  <Label>SEO-titel</Label>
-                  <CopyButton value={seoTitle} />
-                </div>
-                <Input value={seoTitle} onChange={(e) => handleSeoTitle(e.target.value)} />
-              </div>
-
-              <div className="space-y-1">
-                <div className="flex items-center gap-1">
                   <Label>Focus zoekwoord</Label>
                   <CopyButton value={seoKeyword} />
                 </div>
@@ -318,18 +310,11 @@ export function WebsiteTab({ season, shows }: WebsiteTabProps) {
               </div>
 
               <div className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1">
-                    <Label>Meta-omschrijving</Label>
-                    <CopyButton value={seoMeta} />
-                  </div>
-                  <span className={cn("text-xs", metaColor)}>{metaLen} tekens</span>
+                <div className="flex items-center gap-1">
+                  <Label>SEO-titel</Label>
+                  <CopyButton value={seoTitle} />
                 </div>
-                <Textarea
-                  rows={2}
-                  value={seoMeta}
-                  onChange={(e) => handleSeoMeta(e.target.value)}
-                />
+                <Input value={seoTitle} onChange={(e) => handleSeoTitle(e.target.value)} />
               </div>
 
               <div className="space-y-1">
