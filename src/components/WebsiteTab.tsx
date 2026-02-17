@@ -22,6 +22,7 @@ import { useUpdateShow } from "@/hooks/useShows";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ImageCropSection } from "@/components/ImageCropSection";
+import { CopyButton } from "@/components/CopyButton";
 
 interface WebsiteTabProps {
   season: string;
@@ -293,12 +294,18 @@ export function WebsiteTab({ season, shows }: WebsiteTabProps) {
               </div>
 
               <div className="space-y-1">
-                <Label>SEO-titel</Label>
+                <div className="flex items-center gap-1">
+                  <Label>SEO-titel</Label>
+                  <CopyButton value={seoTitle} />
+                </div>
                 <Input value={seoTitle} onChange={(e) => handleSeoTitle(e.target.value)} />
               </div>
 
               <div className="space-y-1">
-                <Label>Focus zoekwoord</Label>
+                <div className="flex items-center gap-1">
+                  <Label>Focus zoekwoord</Label>
+                  <CopyButton value={seoKeyword} />
+                </div>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -312,7 +319,10 @@ export function WebsiteTab({ season, shows }: WebsiteTabProps) {
 
               <div className="space-y-1">
                 <div className="flex items-center justify-between">
-                  <Label>Meta-omschrijving</Label>
+                  <div className="flex items-center gap-1">
+                    <Label>Meta-omschrijving</Label>
+                    <CopyButton value={seoMeta} />
+                  </div>
                   <span className={cn("text-xs", metaColor)}>{metaLen} tekens</span>
                 </div>
                 <Textarea
@@ -323,7 +333,10 @@ export function WebsiteTab({ season, shows }: WebsiteTabProps) {
               </div>
 
               <div className="space-y-1">
-                <Label>URL-slug</Label>
+                <div className="flex items-center gap-1">
+                  <Label>URL-slug</Label>
+                  <CopyButton value={`stadstheaterzoetermeer.nl/${seoSlug}`} />
+                </div>
                 <div className="flex items-center">
                   <span className="text-xs text-muted-foreground px-3 py-2 border border-r-0 border-border rounded-l-md bg-muted">
                     stadstheaterzoetermeer.nl/
@@ -366,7 +379,10 @@ export function WebsiteTab({ season, shows }: WebsiteTabProps) {
               />
 
               <div className="flex items-center justify-between">
-                <span className="text-xs text-muted-foreground">{wordCount} woorden</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">{wordCount} woorden</span>
+                  <CopyButton value={showOriginal ? (selected.description_text || "") : webText} />
+                </div>
                 <Button
                   size="sm"
                   onClick={handleOptimize}

@@ -11,6 +11,7 @@ import type { ShowWithImages, ShowImage } from "@/lib/showStatus";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import { CopyButton } from "@/components/CopyButton";
 
 // ─── Crop formats ───
 export interface CropFormat {
@@ -222,7 +223,10 @@ export function ImageCropSection({ show, season }: ImageCropSectionProps) {
                     alt={img.alt_text || ""}
                     className="w-full h-20 object-cover rounded"
                   />
-                  <p className="text-[10px] text-muted-foreground truncate">{img.file_name}</p>
+                  <div className="flex items-center gap-1">
+                    <p className="text-[10px] text-muted-foreground truncate flex-1">{img.file_name}</p>
+                    <CopyButton value={img.file_name || ""} className="h-5 w-5" />
+                  </div>
                   {img.file_size && (
                     <p className="text-[10px] text-muted-foreground">
                       {(img.file_size / 1024).toFixed(0)} KB
@@ -359,6 +363,7 @@ export function ImageCropSection({ show, season }: ImageCropSectionProps) {
                     defaultValue={img!.alt_text || ""}
                     onBlur={(e) => handleUpdateAltText(img!.id, e.target.value)}
                   />
+                  <CopyButton value={img!.alt_text || ""} />
                 </div>
               ))}
           </div>

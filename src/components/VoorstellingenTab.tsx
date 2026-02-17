@@ -195,7 +195,7 @@ export function VoorstellingenTab({ season, shows, openNewDialog, onNewDialogClo
         await updateShow.mutateAsync({ id: editingShow.id, ...payload });
         toast.success("Voorstelling opgeslagen");
       } else {
-        await createShow.mutateAsync(payload);
+        await createShow.mutateAsync(payload as Omit<typeof payload, never> & { title: string });
         toast.success("Voorstelling aangemaakt");
       }
       closeModal();
