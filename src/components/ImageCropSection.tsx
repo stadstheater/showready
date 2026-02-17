@@ -72,7 +72,7 @@ async function getCroppedBlob(
     canvas.toBlob(
       (blob) => (blob ? resolve(blob) : reject(new Error("toBlob failed"))),
       "image/webp",
-      0.85,
+      0.92,
     );
   });
 }
