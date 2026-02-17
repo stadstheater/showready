@@ -3,8 +3,16 @@ import { format, parseISO } from "date-fns";
 import { nl } from "date-fns/locale";
 import mammoth from "mammoth";
 import {
-  Plus, Trash2, Image, Search, Edit3, Copy, LayoutGrid, X, Upload, Calendar, Euro, Tag,
+  Plus, Trash2, Image, Search, Edit3, Copy, LayoutGrid, X, Upload, Calendar, Euro, Tag, Theater,
 } from "lucide-react";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
+  Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { FileDropZone } from "@/components/FileDropZone";
 import { SortableList } from "@/components/SortableList";
 import { useSortOrder } from "@/hooks/useSortOrder";
@@ -449,13 +457,11 @@ export function VoorstellingenTab({ season, shows, openNewDialog, onNewDialogClo
     }
   };
 
-  const handleDelete = (id: string, title: string) => {
-    if (confirm(`Weet je zeker dat je "${title}" wilt verwijderen?`)) {
-      deleteShow.mutate(id, {
-        onSuccess: () => toast.success("Verwijderd"),
-        onError: () => toast.error("Fout bij verwijderen"),
-      });
-    }
+  const handleDelete = (id: string) => {
+    deleteShow.mutate(id, {
+      onSuccess: () => toast.success("Verwijderd"),
+      onError: () => toast.error("Fout bij verwijderen"),
+    });
   };
 
   const handleDuplicate = (show: ShowWithImages) => {
@@ -656,21 +662,21 @@ export function VoorstellingenTab({ season, shows, openNewDialog, onNewDialogClo
 
         {/* EMPTY STATE */}
         {filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24">
-            <LayoutGrid className="h-16 w-16 text-muted-foreground/40 mb-4" />
-            <p className="text-lg text-muted-foreground">
-              Nog geen voorstellingen in seizoen {season}
+          <div className="flex flex-col items-center justify-center py-24 text-center">
+            <div className="rounded-full bg-muted p-6 mb-5">
+              <Theater className="h-12 w-12 text-muted-foreground/50" />
+            </div>
+            <h3 className="text-lg font-semibold text-foreground mb-1">Geen voorstellingen</h3>
+            <p className="text-sm text-muted-foreground mb-5 max-w-xs">
+              Er zijn nog geen voorstellingen voor seizoen {season}. Voeg je eerste voorstelling toe om te beginnen.
             </p>
-            <button
-              onClick={openCreate}
-              className="mt-2 text-sm text-primary hover:underline flex items-center gap-1"
-            >
-              <Plus className="h-3.5 w-3.5" /> Nieuwe voorstelling toevoegen
-            </button>
+            <Button onClick={openCreate} className="gap-2">
+              <Plus className="h-4 w-4" /> Maak een voorstelling aan
+            </Button>
           </div>
         ) : (
           /* GRID */
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {filtered.map((show) => (
               <Card key={show.id} className="overflow-hidden border-border bg-card group">
                 {/* Cover image */}
@@ -740,20 +746,53 @@ export function VoorstellingenTab({ season, shows, openNewDialog, onNewDialogClo
 
                   {/* Actions */}
                   <div className="flex items-center gap-1 pt-2 border-t border-border">
-                    <Button variant="ghost" size="sm" className="h-8 gap-1.5 text-xs" onClick={() => openEdit(show)}>
-                      <Edit3 className="h-3.5 w-3.5" /> Bewerk
-                    </Button>
-                    <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => handleDuplicate(show)}>
-                      <Copy className="h-3.5 w-3.5" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 text-xs ml-auto hover:text-destructive"
-                      onClick={() => handleDelete(show.id, show.title)}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
+                    <TooltipProvider delayDuration={300}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(show)}>
+                            <Edit3 className="h-3.5 w-3.5" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Bewerken</TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDuplicate(show)}>
+                            <Copy className="h-3.5 w-3.5" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Dupliceren</TooltipContent>
+                      </Tooltip>
+                      <AlertDialog>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 ml-auto hover:text-destructive">
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </AlertDialogTrigger>
+                          </TooltipTrigger>
+                          <TooltipContent>Verwijderen</TooltipContent>
+                        </Tooltip>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Voorstelling verwijderen?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Weet je zeker dat je "{show.title}" wilt verwijderen? Dit kan niet ongedaan worden gemaakt.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Annuleer</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleDelete(show.id)}
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            >
+                              Verwijderen
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </TooltipProvider>
                   </div>
                 </CardContent>
               </Card>
