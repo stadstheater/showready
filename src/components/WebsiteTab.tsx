@@ -46,7 +46,7 @@ const CHECKLIST_LABELS: Record<keyof ShowChecklist, string> = {
   text: "Tekst",
   heroImage: "Hoofdafbeelding",
   seoKeyword: "SEO zoekwoord",
-  metaDescription: "Meta-omschrijving",
+  
   webText: "Webtekst",
   cropHero: "Crop: Hero",
   cropUitlichten: "Crop: Uitlichten",

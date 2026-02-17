@@ -5,7 +5,6 @@ export interface ShowChecklist {
   text: boolean;
   heroImage: boolean;
   seoKeyword: boolean;
-  metaDescription: boolean;
   webText: boolean;
   cropHero: boolean;
   cropUitlichten: boolean;
@@ -60,7 +59,6 @@ export function getChecklist(show: ShowWithImages): ShowChecklist {
     text: !!show.description_text && show.description_text.trim().length > 0,
     heroImage: !!show.hero_image_url,
     seoKeyword: !!show.seo_keyword && show.seo_keyword.trim().length > 0,
-    metaDescription: !!show.seo_meta_description && show.seo_meta_description.trim().length >= 50,
     webText: !!show.web_text && show.web_text.trim().length > 0,
     cropHero: images.some(i => i.type === "crop_hero"),
     cropUitlichten: images.some(i => i.type === "crop_uitlichten"),
