@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 import type { ShowWithImages } from "@/lib/showStatus";
 
 export function useShows(season: string) {
@@ -43,7 +44,7 @@ export function useUpdateShow(season: string) {
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: Partial<ShowWithImages> & { id: string }) => {
-      const { show_images, created_at, updated_at, ...cleanUpdates } = updates as any;
+      const { show_images, created_at, updated_at, ...cleanUpdates } = updates;
       const { data, error } = await supabase
         .from("shows")
         .update(cleanUpdates)
@@ -101,7 +102,12 @@ export function useDeleteShow() {
   });
 }
 
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+
 export async function uploadShowImage(file: File, showId: string): Promise<string> {
+  if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+    throw new Error(`Ongeldig bestandstype: ${file.type}. Alleen JPEG, PNG, WebP en GIF zijn toegestaan.`);
+  }
   const ext = file.name.split(".").pop();
   const path = `${showId}/${Date.now()}.${ext}`;
   const { error } = await supabase.storage.from("show-assets").upload(path, file);
@@ -112,9 +118,12 @@ export async function uploadShowImage(file: File, showId: string): Promise<strin
 
 export async function deleteShowImage(fileUrl: string) {
   const parts = fileUrl.split("/show-assets/");
-  if (parts.length < 2) return;
+  if (parts.length < 2) {
+    throw new Error(`Ongeldig bestandspad: kan storage-pad niet herleiden uit URL`);
+  }
   const path = parts[1];
-  await supabase.storage.from("show-assets").remove([path]);
+  const { error } = await supabase.storage.from("show-assets").remove([path]);
+  if (error) throw error;
 }
 
 export function useAddSceneImage() {
@@ -138,9 +147,15 @@ export function useDeleteSceneImage() {
 
   return useMutation({
     mutationFn: async ({ id, fileUrl }: { id: string; fileUrl: string }) => {
-      await deleteShowImage(fileUrl);
+      // Delete DB record first — if this fails, no orphaned state is created.
       const { error } = await supabase.from("show_images").delete().eq("id", id);
       if (error) throw error;
+      // Then clean up storage (best-effort; orphaned files are less harmful than orphaned records).
+      try {
+        await deleteShowImage(fileUrl);
+      } catch (storageErr) {
+        console.warn("Storage cleanup failed (orphaned file may remain):", storageErr);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["shows"] });

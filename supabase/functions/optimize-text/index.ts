@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -6,13 +7,59 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const MAX_TEXT_LENGTH = 50_000;
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
+    // --- Auth check: verify the caller has a valid Supabase session ---
+    const authHeader = req.headers.get("authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return new Response(
+        JSON.stringify({ error: "Niet geautoriseerd. Log opnieuw in." }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { authorization: authHeader } },
+    });
+
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      return new Response(
+        JSON.stringify({ error: "Ongeldige sessie. Log opnieuw in." }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // --- Input validation ---
     const { text, keyword, title, model, maxWords } = await req.json();
+
+    if (!text || typeof text !== "string" || !text.trim()) {
+      return new Response(
+        JSON.stringify({ error: "Tekst is verplicht." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    if (!title || typeof title !== "string" || !title.trim()) {
+      return new Response(
+        JSON.stringify({ error: "Titel is verplicht." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    if (text.length > MAX_TEXT_LENGTH) {
+      return new Response(
+        JSON.stringify({ error: `Tekst is te lang (max ${MAX_TEXT_LENGTH} tekens).` }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const aiModel = model || "google/gemini-3-flash-preview";
-    const wordLimit = maxWords || 150;
+    const wordLimit = Math.min(Math.max(Number(maxWords) || 150, 1), 5000);
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
@@ -70,7 +117,7 @@ ${text}`;
   } catch (e) {
     console.error("optimize-text error:", e);
     return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : "Onbekende fout" }),
+      JSON.stringify({ error: "Er is een fout opgetreden bij het verwerken van het verzoek." }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

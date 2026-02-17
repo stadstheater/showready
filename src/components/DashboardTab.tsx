@@ -10,6 +10,9 @@ import {
   getStatus,
   getStatusLabel,
   getCompletedCount,
+  statusColor,
+  statusTextColor,
+  statusBgLight,
   type ShowStatus,
 } from "@/lib/showStatus";
 
@@ -17,30 +20,6 @@ interface DashboardTabProps {
   season: string;
   shows: ShowWithImages[];
   onNewShow: () => void;
-}
-
-function statusColor(status: ShowStatus) {
-  switch (status) {
-    case "todo": return "bg-status-todo";
-    case "bezig": return "bg-status-busy";
-    case "afgerond": return "bg-status-done";
-  }
-}
-
-function statusTextColor(status: ShowStatus) {
-  switch (status) {
-    case "todo": return "text-status-todo";
-    case "bezig": return "text-status-busy";
-    case "afgerond": return "text-status-done";
-  }
-}
-
-function statusBgLight(status: ShowStatus) {
-  switch (status) {
-    case "todo": return "bg-status-todo/10";
-    case "bezig": return "bg-status-busy/10";
-    case "afgerond": return "bg-status-done/10";
-  }
 }
 
 function StatusIcon({ status }: { status: ShowStatus }) {

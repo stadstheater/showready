@@ -73,17 +73,48 @@ export function getCompletedCount(checklist: ShowChecklist): number {
   return Object.values(checklist).filter(Boolean).length;
 }
 
+export function getTotalCount(checklist: ShowChecklist): number {
+  return Object.keys(checklist).length;
+}
+
 export function getProgressPercent(checklist: ShowChecklist): number {
-  return Math.round((getCompletedCount(checklist) / 12) * 100);
+  const total = getTotalCount(checklist);
+  if (total === 0) return 0;
+  return Math.round((getCompletedCount(checklist) / total) * 100);
 }
 
 export type ShowStatus = "todo" | "bezig" | "afgerond";
 
 export function getStatus(checklist: ShowChecklist): ShowStatus {
-  const count = getCompletedCount(checklist);
-  if (count === 0) return "todo";
-  if (count === 12) return "afgerond";
+  const completed = getCompletedCount(checklist);
+  const total = getTotalCount(checklist);
+  if (completed === 0) return "todo";
+  if (completed === total) return "afgerond";
   return "bezig";
+}
+
+export function statusColor(status: ShowStatus): string {
+  switch (status) {
+    case "todo": return "bg-status-todo";
+    case "bezig": return "bg-status-busy";
+    case "afgerond": return "bg-status-done";
+  }
+}
+
+export function statusTextColor(status: ShowStatus): string {
+  switch (status) {
+    case "todo": return "text-status-todo";
+    case "bezig": return "text-status-busy";
+    case "afgerond": return "text-status-done";
+  }
+}
+
+export function statusBgLight(status: ShowStatus): string {
+  switch (status) {
+    case "todo": return "bg-status-todo/15";
+    case "bezig": return "bg-status-busy/15";
+    case "afgerond": return "bg-status-done/15";
+  }
 }
 
 export function getStatusLabel(status: ShowStatus): string {
@@ -91,5 +122,9 @@ export function getStatusLabel(status: ShowStatus): string {
     case "todo": return "To-do";
     case "bezig": return "Bezig";
     case "afgerond": return "Afgerond";
+    default: {
+      const _exhaustive: never = status;
+      return _exhaustive;
+    }
   }
 }

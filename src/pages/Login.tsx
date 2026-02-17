@@ -53,9 +53,7 @@ const Login = () => {
       } else {
         setMessage("Magic link verzonden. Controleer je inbox.");
       }
-    }
-
-    if (mode === "password") {
+    } else if (mode === "password") {
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,

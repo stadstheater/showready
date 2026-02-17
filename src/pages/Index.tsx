@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AppHeader } from "@/components/AppHeader";
 import { AppTabs, type TabId } from "@/components/AppTabs";
 import { DashboardTab } from "@/components/DashboardTab";
@@ -22,12 +22,13 @@ const Index = () => {
   const { data: shows = [], isLoading } = useShows(season);
 
   // Update season when settings load and differ from current
-  // (only on first meaningful load)
   const [settingsApplied, setSettingsApplied] = useState(false);
-  if (!settingsApplied && defaultSeason && defaultSeason !== "auto") {
-    setSeason(defaultSeason);
-    setSettingsApplied(true);
-  }
+  useEffect(() => {
+    if (!settingsApplied && defaultSeason && defaultSeason !== "auto") {
+      setSeason(defaultSeason);
+      setSettingsApplied(true);
+    }
+  }, [settingsApplied, defaultSeason]);
 
   const handleNewShow = () => {
     setActiveTab("voorstellingen");
