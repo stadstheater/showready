@@ -136,7 +136,7 @@ export function ImageCropSection({ show, season }: ImageCropSectionProps) {
       );
       const fileName = generateFileName(show, activeCrop.suffix);
       const storagePath = `${show.id}/${fileName}`;
-      const altText = generateAltText(show, activeCrop.label);
+      const existingAltText = getCropImage(activeCrop.dbType)?.alt_text || images.find((i) => i.alt_text && CROP_FORMATS.some((f) => f.dbType === i.type))?.alt_text || "";
 
       // Remove old crop if exists
       const existing = getCropImage(activeCrop.dbType);
@@ -159,7 +159,7 @@ export function ImageCropSection({ show, season }: ImageCropSectionProps) {
         type: activeCrop.dbType,
         file_url: urlData.publicUrl,
         file_name: fileName,
-        alt_text: altText,
+        alt_text: existingAltText,
         file_size: blob.size,
       });
 
