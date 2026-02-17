@@ -160,11 +160,21 @@ export function ImageCropSection({ show, season }: ImageCropSectionProps) {
     }
   };
 
-  const handleDownload = (img: ShowImage) => {
-    const a = document.createElement("a");
-    a.href = img.file_url;
-    a.download = img.file_name || "download.webp";
-    a.click();
+  const handleDownload = async (img: ShowImage) => {
+    try {
+      const response = await fetch(img.file_url);
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = img.file_name || "download.webp";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch {
+      toast.error("Fout bij downloaden");
+    }
   };
 
   const handleDownloadAll = () => {
