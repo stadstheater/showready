@@ -1,9 +1,11 @@
-import { useState, useRef, useMemo, useEffect, ReactNode } from "react";
+import { useState, useRef, useMemo, useEffect, useCallback, ReactNode } from "react";
 import { format, parseISO } from "date-fns";
 import { nl } from "date-fns/locale";
+import mammoth from "mammoth";
 import {
   Plus, Trash2, Image, Search, Edit3, Copy, LayoutGrid, X, Upload, Calendar, Euro, Tag,
 } from "lucide-react";
+import { FileDropZone } from "@/components/FileDropZone";
 import { SortableList } from "@/components/SortableList";
 import { useSortOrder } from "@/hooks/useSortOrder";
 import { Button } from "@/components/ui/button";
@@ -509,24 +511,92 @@ export function VoorstellingenTab({ season, shows, openNewDialog, onNewDialogClo
   };
 
   // ─── Text file upload ───
+  const processTextFile = useCallback(async (file: File) => {
+    const ext = file.name.split(".").pop()?.toLowerCase();
+    if (ext === "txt") {
+      const text = await file.text();
+      setForm(f => ({ ...f, description_text: text, text_filename: file.name }));
+      toast.success(`Tekst uit "${file.name}" geïmporteerd`);
+    } else if (ext === "docx") {
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const result = await mammoth.convertToHtml({ arrayBuffer });
+        setForm(f => ({ ...f, description_text: result.value, text_filename: file.name }));
+        toast.success(`Tekst uit "${file.name}" geëxtraheerd`);
+        if (result.messages.length > 0) {
+          console.warn("Mammoth warnings:", result.messages);
+        }
+      } catch {
+        toast.error(`Kon "${file.name}" niet verwerken`);
+      }
+    } else {
+      toast.info("Alleen .txt en .docx bestanden worden ondersteund voor tekst.");
+    }
+  }, []);
+
   const handleTextUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    try {
-      const ext = file.name.split(".").pop()?.toLowerCase();
-      if (ext === "txt") {
-        const text = await file.text();
-        setForm(f => ({ ...f, description_text: text, text_filename: file.name }));
-      } else {
-        // For .docx/.pdf, just store the filename — content must be pasted manually
-        toast.info("DOCX/PDF bestanden kunnen niet automatisch gelezen worden. Plak de tekst handmatig in het tekstveld.");
-        setForm(f => ({ ...f, text_filename: file.name }));
-      }
-    } catch {
-      toast.error("Kon bestand niet lezen");
-    }
+    await processTextFile(file);
     if (textInputRef.current) textInputRef.current.value = "";
   };
+
+  // ─── Drag & drop handler ───
+  const handleDroppedFiles = useCallback(async (files: File[]) => {
+    const imageFiles: File[] = [];
+    let textFile: File | null = null;
+
+    for (const file of files) {
+      if (file.type.startsWith("image/")) {
+        imageFiles.push(file);
+      } else {
+        // Take the first text/docx file
+        if (!textFile) textFile = file;
+      }
+    }
+
+    // Process text file
+    if (textFile) {
+      await processTextFile(textFile);
+    }
+
+    // Process images
+    if (imageFiles.length > 0) {
+      // If no hero image yet, use the first image as hero
+      if (!form.hero_image_url && imageFiles.length > 0) {
+        const heroFile = imageFiles.shift()!;
+        setHeroUploading(true);
+        try {
+          const showId = editingShow?.id || "new";
+          const url = await uploadShowImage(heroFile, showId);
+          setForm(f => ({ ...f, hero_image_url: url }));
+          toast.success("Voorstellingsbeeld toegevoegd");
+        } catch {
+          toast.error("Fout bij uploaden afbeelding");
+        } finally {
+          setHeroUploading(false);
+        }
+      }
+
+      // Remaining images as scene images (only when editing existing show)
+      if (imageFiles.length > 0 && editingShow) {
+        setSceneUploading(true);
+        try {
+          for (const file of imageFiles) {
+            const url = await uploadShowImage(file, editingShow.id);
+            await addSceneImage.mutateAsync({ showId: editingShow.id, fileUrl: url, fileName: file.name });
+          }
+          toast.success(`${imageFiles.length} scenefoto('s) toegevoegd`);
+        } catch {
+          toast.error("Fout bij uploaden foto's");
+        } finally {
+          setSceneUploading(false);
+        }
+      } else if (imageFiles.length > 0 && !editingShow) {
+        toast.info("Sla de voorstelling eerst op om scenefoto's toe te voegen.");
+      }
+    }
+  }, [form.hero_image_url, editingShow, processTextFile, addSceneImage]);
 
   // ─── Date helpers ───
   const setDateAt = (index: number, val: string) => {
@@ -695,7 +765,7 @@ export function VoorstellingenTab({ season, shows, openNewDialog, onNewDialogClo
       {/* ─── MODAL ─── */}
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/70 backdrop-blur-sm p-4">
-          <div className="bg-card border border-border rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-xl">
+          <FileDropZone onFilesDropped={handleDroppedFiles} disabled={heroUploading || sceneUploading} className="bg-card border border-border rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-xl">
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-border">
               <h2 className="text-lg font-semibold text-card-foreground">
@@ -747,7 +817,7 @@ export function VoorstellingenTab({ season, shows, openNewDialog, onNewDialogClo
                 </Button>
               </div>
             </div>
-          </div>
+          </FileDropZone>
         </div>
       )}
     </>
