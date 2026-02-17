@@ -23,6 +23,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ImageCropSection } from "@/components/ImageCropSection";
 import { CopyButton } from "@/components/CopyButton";
+import { RichTextEditor } from "@/components/RichTextEditor";
 
 interface WebsiteTabProps {
   season: string;
@@ -353,15 +354,16 @@ export function WebsiteTab({ season, shows }: WebsiteTabProps) {
                 </Button>
               </div>
 
-              <Textarea
-                rows={6}
-                value={showOriginal ? (selected.description_text || "") : webText}
-                onChange={(e) => {
-                  if (!showOriginal) handleWebText(e.target.value);
-                }}
-                readOnly={showOriginal}
-                className={showOriginal ? "opacity-70" : ""}
-              />
+              {showOriginal ? (
+                <div className="rounded-md border border-input bg-background px-3 py-2 text-sm opacity-70 min-h-[120px] prose prose-sm max-w-none"
+                  dangerouslySetInnerHTML={{ __html: selected.description_text || "" }}
+                />
+              ) : (
+                <RichTextEditor
+                  value={webText}
+                  onChange={(html) => handleWebText(html)}
+                />
+              )}
 
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
