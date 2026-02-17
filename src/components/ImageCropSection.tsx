@@ -152,8 +152,9 @@ export function ImageCropSection({ show, season }: ImageCropSectionProps) {
       queryClient.invalidateQueries({ queryKey: ["shows", season] });
       toast.success(`${activeCrop.label} crop opgeslagen`);
       setActiveCrop(null);
-    } catch (e: any) {
-      toast.error(e.message || "Fout bij opslaan crop");
+    } catch (e) {
+      console.error("Fout bij opslaan crop:", e);
+      toast.error(e instanceof Error ? e.message : "Fout bij opslaan crop");
     } finally {
       setSaving(false);
     }

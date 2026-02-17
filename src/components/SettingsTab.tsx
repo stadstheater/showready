@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { Settings, Plus, X } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -28,11 +28,17 @@ interface SettingsTabProps {
 export function SettingsTab({ season, showCount }: SettingsTabProps) {
   const { data: settings, isLoading } = useSettings();
   const updateSetting = useUpdateSetting();
-  const debounceTimers = useRef<Record<string, NodeJS.Timeout>>({});
+  const debounceTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const [newGenre, setNewGenre] = useState("");
 
+  useEffect(() => {
+    return () => {
+      Object.values(debounceTimers.current).forEach(clearTimeout);
+    };
+  }, []);
+
   const save = useCallback(
-    (key: string, value: any) => {
+    (key: string, value: string | number | string[] | null) => {
       if (debounceTimers.current[key]) clearTimeout(debounceTimers.current[key]);
       debounceTimers.current[key] = setTimeout(() => {
         updateSetting.mutate(

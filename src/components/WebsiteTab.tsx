@@ -66,6 +66,12 @@ export function WebsiteTab({ season, shows }: WebsiteTabProps) {
 
   const updateShow = useUpdateShow(season);
 
+  useEffect(() => {
+    return () => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    };
+  }, []);
+
   // Filter eligible shows
   const eligible = useMemo(
     () =>
@@ -102,7 +108,7 @@ export function WebsiteTab({ season, shows }: WebsiteTabProps) {
     setSeoSlug(selected.seo_slug || autoSlug);
     setWebText(selected.web_text || selected.description_text || "");
     setShowOriginal(false);
-  }, [selected?.id, selectedUpdatedAt]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [selected?.id, selectedUpdatedAt, selected?.title, selected?.subtitle, selected?.description_text, selected?.seo_title, selected?.seo_keyword, selected?.seo_meta_description, selected?.seo_slug, selected?.web_text]);
 
   // Auto-save with debounce
   const autoSave = useCallback(
@@ -210,7 +216,7 @@ export function WebsiteTab({ season, shows }: WebsiteTabProps) {
               >
                 <div className="w-12 h-8 shrink-0 rounded overflow-hidden bg-muted">
                   {show.hero_image_url ? (
-                    <img src={show.hero_image_url} alt="" className="w-full h-full object-cover" />
+                    <img src={show.hero_image_url} alt={show.title || "Voorstellingsbeeld"} className="w-full h-full object-cover" />
                   ) : (
                     <div className="flex items-center justify-center h-full">
                       <ImageIcon className="h-3 w-3 text-muted-foreground" />
@@ -242,7 +248,7 @@ export function WebsiteTab({ season, shows }: WebsiteTabProps) {
             {/* Header */}
             <div className="flex items-center gap-4">
               {selected.hero_image_url && (
-                <img src={selected.hero_image_url} alt="" className="w-16 h-12 rounded-lg object-cover" />
+                <img src={selected.hero_image_url} alt={selected.title || "Voorstellingsbeeld"} className="w-16 h-12 rounded-lg object-cover" />
               )}
               <div>
                 <h2 className="text-xl font-bold text-card-foreground">{selected.title}</h2>

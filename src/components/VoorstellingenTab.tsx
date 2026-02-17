@@ -127,7 +127,7 @@ export function VoorstellingenTab({ season, shows, openNewDialog, onNewDialogClo
       setForm(emptyForm());
       onNewDialogClose?.();
     }
-  }, [openNewDialog]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [openNewDialog, modalOpen, onNewDialogClose]);
 
   const showsWithStatus = useMemo(() =>
     shows.map((s) => {
@@ -199,7 +199,8 @@ export function VoorstellingenTab({ season, shows, openNewDialog, onNewDialogClo
         toast.success("Voorstelling aangemaakt");
       }
       closeModal();
-    } catch {
+    } catch (e) {
+      console.error("Fout bij opslaan voorstelling:", e);
       toast.error("Fout bij opslaan");
     }
   };
@@ -229,7 +230,8 @@ export function VoorstellingenTab({ season, shows, openNewDialog, onNewDialogClo
       const showId = editingShow?.id || "new";
       const url = await uploadShowImage(file, showId);
       setForm(f => ({ ...f, hero_image_url: url }));
-    } catch {
+    } catch (e) {
+      console.error("Fout bij uploaden afbeelding:", e);
       toast.error("Fout bij uploaden afbeelding");
     } finally {
       setHeroUploading(false);
@@ -253,7 +255,8 @@ export function VoorstellingenTab({ season, shows, openNewDialog, onNewDialogClo
         const url = await uploadShowImage(file, editingShow.id);
         await addSceneImage.mutateAsync({ showId: editingShow.id, fileUrl: url, fileName: file.name });
       }
-    } catch {
+    } catch (e) {
+      console.error("Fout bij uploaden scenefoto's:", e);
       toast.error("Fout bij uploaden foto's");
     } finally {
       setSceneUploading(false);
@@ -279,7 +282,8 @@ export function VoorstellingenTab({ season, shows, openNewDialog, onNewDialogClo
         toast.info("DOCX/PDF bestanden kunnen niet automatisch gelezen worden. Plak de tekst handmatig in het tekstveld.");
         setForm(f => ({ ...f, text_filename: file.name }));
       }
-    } catch {
+    } catch (e) {
+      console.error("Fout bij lezen bestand:", e);
       toast.error("Kon bestand niet lezen");
     }
     if (textInputRef.current) textInputRef.current.value = "";
@@ -430,7 +434,7 @@ export function VoorstellingenTab({ season, shows, openNewDialog, onNewDialogClo
                     <Button variant="ghost" size="sm" className="h-8 gap-1.5 text-xs" onClick={() => openEdit(show)}>
                       <Edit3 className="h-3.5 w-3.5" /> Bewerk
                     </Button>
-                    <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => handleDuplicate(show)}>
+                    <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => handleDuplicate(show)} aria-label="Dupliceer voorstelling">
                       <Copy className="h-3.5 w-3.5" />
                     </Button>
                     <Button
@@ -438,6 +442,7 @@ export function VoorstellingenTab({ season, shows, openNewDialog, onNewDialogClo
                       size="sm"
                       className="h-8 text-xs ml-auto hover:text-destructive"
                       onClick={() => handleDelete(show.id, show.title)}
+                      aria-label="Verwijder voorstelling"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
@@ -451,11 +456,11 @@ export function VoorstellingenTab({ season, shows, openNewDialog, onNewDialogClo
 
       {/* ─── MODAL ─── */}
       {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/70 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/70 backdrop-blur-sm p-4" role="dialog" aria-modal="true" aria-labelledby="show-modal-title">
           <div className="bg-card border border-border rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-xl">
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-border">
-              <h2 className="text-lg font-semibold text-card-foreground">
+              <h2 id="show-modal-title" className="text-lg font-semibold text-card-foreground">
                 {editingShow ? "Voorstelling bewerken" : "Nieuwe voorstelling"}
               </h2>
               <Button variant="ghost" size="icon" onClick={closeModal} className="h-8 w-8">
@@ -484,7 +489,7 @@ export function VoorstellingenTab({ season, shows, openNewDialog, onNewDialogClo
               <div className="space-y-2">
                 <Label>Datum(s)</Label>
                 {form.dates.map((d, i) => (
-                  <div key={i} className="flex items-center gap-2">
+                  <div key={`date-${i}-${d}`} className="flex items-center gap-2">
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !d && "text-muted-foreground")}>

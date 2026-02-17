@@ -1,7 +1,6 @@
 import { Plus, ListChecks, Clock, CheckCircle2, BarChart3, Image } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import type { ShowWithImages } from "@/lib/showStatus";
 import {
@@ -52,11 +51,13 @@ export function DashboardTab({ season, shows, onNewShow }: DashboardTabProps) {
 
   const byStatus = (status: ShowStatus) => showsWithStatus.filter((s) => s.status === status);
 
-  // Genre counts
-  const genres = ["Cabaret", "Muziek", "Theater", "Musical", "Jeugd", "Dans", "Overig"] as const;
-  const genreCounts = genres
-    .map((g) => ({ name: g, count: showsWithStatus.filter((s) => s.genre === g).length }))
-    .filter((g) => g.count > 0)
+  // Genre counts — dynamically derived from actual show data
+  const genreMap = new Map<string, number>();
+  for (const s of showsWithStatus) {
+    const g = s.genre || "Overig";
+    genreMap.set(g, (genreMap.get(g) || 0) + 1);
+  }
+  const genreCounts = Array.from(genreMap, ([name, count]) => ({ name, count }))
     .sort((a, b) => b.count - a.count);
   const maxGenre = Math.max(...genreCounts.map((g) => g.count), 1);
 
@@ -115,7 +116,7 @@ export function DashboardTab({ season, shows, onNewShow }: DashboardTabProps) {
                       <div key={show.id} className="flex items-center gap-3">
                         <div className="h-8 w-8 flex-shrink-0 rounded bg-muted flex items-center justify-center">
                           {show.hero_image_url ? (
-                            <img src={show.hero_image_url} alt="" className="h-8 w-8 rounded object-cover" />
+                            <img src={show.hero_image_url} alt={show.title || "Voorstellingsbeeld"} className="h-8 w-8 rounded object-cover" />
                           ) : (
                             <Image className="h-4 w-4 text-muted-foreground" />
                           )}

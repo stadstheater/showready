@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { AppHeader } from "@/components/AppHeader";
 import { AppTabs, type TabId } from "@/components/AppTabs";
 import { DashboardTab } from "@/components/DashboardTab";
 import { VoorstellingenTab } from "@/components/VoorstellingenTab";
@@ -37,7 +36,6 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <AppHeader />
       <AppTabs
         activeTab={activeTab}
         onTabChange={setActiveTab}
