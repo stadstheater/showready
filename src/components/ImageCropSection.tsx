@@ -163,7 +163,7 @@ export function ImageCropSection({ show, season }: ImageCropSectionProps) {
 
       const { data: urlData } = supabase.storage.from("show-assets").getPublicUrl(storagePath);
 
-      await supabase.from("show_images").insert({
+      const { error: insertErr } = await supabase.from("show_images").insert({
         show_id: show.id,
         type: activeCrop.dbType,
         file_url: urlData.publicUrl,
@@ -171,6 +171,7 @@ export function ImageCropSection({ show, season }: ImageCropSectionProps) {
         alt_text: existingAltText,
         file_size: blob.size,
       });
+      if (insertErr) throw insertErr;
 
       queryClient.invalidateQueries({ queryKey: ["shows", season] });
       toast.success(`${activeCrop.label} crop opgeslagen`);
