@@ -28,7 +28,7 @@ export interface CropFormat {
 export const CROP_FORMATS: CropFormat[] = [
   { key: "hero", label: "Hero", width: 2160, height: 1020, suffix: "-hero", description: "Home & voorstellingspagina", dbType: "crop_hero" },
   { key: "uitlichten", label: "Uitlichten", width: 1080, height: 1080, suffix: "-uitlichten", description: "Vierkant", dbType: "crop_uitlichten" },
-  { key: "narrow", label: "Narrow", width: 1650, height: 1080, suffix: "-narrow", description: "Staand formaat", dbType: "crop_narrow" },
+  { key: "narrow", label: "Narrow", width: 1080, height: 1650, suffix: "-narrow", description: "Staand formaat", dbType: "crop_narrow" },
   { key: "slider", label: "Slider", width: 1920, height: 1080, suffix: "-slider", description: "Carrousel liggend", dbType: "crop_slider" },
 ];
 
