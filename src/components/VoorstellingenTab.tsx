@@ -29,6 +29,7 @@ import {
   uploadShowImage, deleteShowImage, useAddSceneImage, useDeleteSceneImage,
 } from "@/hooks/useShows";
 import { toast } from "sonner";
+import { RichTextEditor } from "@/components/RichTextEditor";
 
 interface VoorstellingenTabProps {
   season: string;
@@ -560,25 +561,23 @@ export function VoorstellingenTab({ season, shows, openNewDialog, onNewDialogClo
                 </Select>
               </div>
 
-              {/* Text upload */}
+              {/* Description */}
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <Label>Tekst uploaden</Label>
+                  <Label>Beschrijving</Label>
                   {form.text_filename && (
                     <span className="text-xs text-status-done">{form.text_filename}</span>
                   )}
                 </div>
+                <RichTextEditor
+                  value={form.description_text}
+                  onChange={(html) => setForm(f => ({ ...f, description_text: html }))}
+                  placeholder="Plak of typ hier de beschrijving..."
+                />
                 <input ref={textInputRef} type="file" accept=".txt,.pdf,.docx" className="hidden" onChange={handleTextUpload} />
                 <Button variant="outline" size="sm" onClick={() => textInputRef.current?.click()} className="gap-2">
-                  <Upload className="h-4 w-4" /> Bestand kiezen
+                  <Upload className="h-4 w-4" /> Tekst importeren uit bestand
                 </Button>
-                {form.description_text && (
-                  <Textarea
-                    value={form.description_text}
-                    onChange={e => setForm(f => ({ ...f, description_text: e.target.value }))}
-                    rows={4}
-                  />
-                )}
               </div>
 
               {/* Hero image */}
