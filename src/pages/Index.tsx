@@ -9,6 +9,18 @@ import { SettingsTab } from "@/components/SettingsTab";
 import { getCurrentSeason, getNextSeason, getPrevSeason } from "@/lib/season";
 import { useShows } from "@/hooks/useShows";
 import { useSettings } from "@/hooks/useSettings";
+import {
+  Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbPage, BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { Home } from "lucide-react";
+
+const TAB_LABELS: Record<TabId, string> = {
+  dashboard: "Dashboard",
+  voorstellingen: "Voorstellingen",
+  brochure: "Brochure",
+  website: "Website",
+  instellingen: "Instellingen",
+};
 
 const Index = () => {
   const { data: settings } = useSettings();
@@ -18,6 +30,7 @@ const Index = () => {
   const [season, setSeason] = useState(initialSeason);
   const [activeTab, setActiveTab] = useState<TabId>("dashboard");
   const [openNewShowDialog, setOpenNewShowDialog] = useState(false);
+  const [selectedShowName, setSelectedShowName] = useState<string | null>(null);
 
   const { data: shows = [], isLoading } = useShows(season);
 
@@ -29,6 +42,11 @@ const Index = () => {
       setSettingsApplied(true);
     }
   }, [settingsApplied, defaultSeason]);
+
+  // Clear selected show name when leaving website tab
+  useEffect(() => {
+    if (activeTab !== "website") setSelectedShowName(null);
+  }, [activeTab]);
 
   const handleNewShow = () => {
     setActiveTab("voorstellingen");
@@ -45,6 +63,48 @@ const Index = () => {
         onPrevSeason={() => setSeason(getPrevSeason(season))}
         onNextSeason={() => setSeason(getNextSeason(season))}
       />
+
+      {/* Breadcrumb */}
+      <div className="container py-2">
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink
+                className="cursor-pointer flex items-center gap-1"
+                onClick={() => setActiveTab("dashboard")}
+              >
+                <Home className="h-3.5 w-3.5" />
+                Dashboard
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            {activeTab !== "dashboard" && (
+              <>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  {selectedShowName ? (
+                    <BreadcrumbLink
+                      className="cursor-pointer"
+                      onClick={() => setActiveTab(activeTab)}
+                    >
+                      {TAB_LABELS[activeTab]}
+                    </BreadcrumbLink>
+                  ) : (
+                    <BreadcrumbPage>{TAB_LABELS[activeTab]}</BreadcrumbPage>
+                  )}
+                </BreadcrumbItem>
+              </>
+            )}
+            {selectedShowName && (
+              <>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>{selectedShowName}</BreadcrumbPage>
+                </BreadcrumbItem>
+              </>
+            )}
+          </BreadcrumbList>
+        </Breadcrumb>
+      </div>
 
       {isLoading ? (
         <div className="flex items-center justify-center py-24">
@@ -64,7 +124,9 @@ const Index = () => {
             />
           )}
           {activeTab === "brochure" && <BrochureTab />}
-          {activeTab === "website" && <WebsiteTab season={season} shows={shows} />}
+          {activeTab === "website" && (
+            <WebsiteTab season={season} shows={shows} onSelectedShowChange={setSelectedShowName} />
+          )}
           {activeTab === "instellingen" && (
             <SettingsTab season={season} showCount={shows.length} />
           )}
