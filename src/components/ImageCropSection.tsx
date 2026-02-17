@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import Cropper, { Area } from "react-easy-crop";
 import {
   Image, Check, Scissors, ZoomIn, ZoomOut, Download, RefreshCw, Move, Tag, Sparkles, Loader2,
@@ -115,12 +115,17 @@ export function ImageCropSection({ show, season }: ImageCropSectionProps) {
     setCroppedAreaPixels(croppedPixels);
   }, []);
 
+  const cropToolRef = useRef<HTMLDivElement>(null);
+
   const handleStartCrop = (fmt: CropFormat, sourceUrl?: string) => {
     setActiveCrop(fmt);
     setCropSourceUrl(sourceUrl || show.hero_image_url || null);
     setCrop({ x: 0, y: 0 });
     setZoom(1);
     setCroppedAreaPixels(null);
+    setTimeout(() => {
+      cropToolRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 100);
   };
 
   const handleCancel = () => {
@@ -428,7 +433,7 @@ export function ImageCropSection({ show, season }: ImageCropSectionProps) {
 
         {/* CROP TOOL */}
         {activeCrop && cropSourceUrl && (
-          <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+          <div ref={cropToolRef} className="rounded-xl border border-border bg-card p-4 space-y-3">
             <div className="flex items-center justify-between">
               <p className="text-sm font-semibold text-card-foreground">
                 {activeCrop.label} — {activeCrop.width} × {activeCrop.height}
