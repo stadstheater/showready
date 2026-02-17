@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import Cropper, { Area } from "react-easy-crop";
 import {
-  Image, Check, Scissors, ZoomIn, ZoomOut, Download, RefreshCw, Move, Tag,
+  Image, Check, Scissors, ZoomIn, ZoomOut, Download, RefreshCw, Move, Tag, Sparkles, Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { CopyButton } from "@/components/CopyButton";
+import { Textarea } from "@/components/ui/textarea";
 
 // ─── Crop formats ───
 export interface CropFormat {
@@ -89,9 +90,21 @@ export function ImageCropSection({ show, season }: ImageCropSectionProps) {
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
   const [saving, setSaving] = useState(false);
+  const [generatingAlt, setGeneratingAlt] = useState(false);
+  const [altText, setAltText] = useState("");
+  const [altInitialized, setAltInitialized] = useState(false);
   const queryClient = useQueryClient();
 
   const images = show.show_images || [];
+
+  // Initialize alt text from first existing crop image
+  if (!altInitialized && images.length > 0) {
+    const firstCropWithAlt = images.find((i) => i.alt_text && CROP_FORMATS.some((f) => f.dbType === i.type));
+    if (firstCropWithAlt?.alt_text) {
+      setAltText(firstCropWithAlt.alt_text);
+    }
+    setAltInitialized(true);
+  }
 
   const getCropImage = (dbType: string): ShowImage | undefined =>
     images.find((i) => i.type === dbType);
@@ -184,9 +197,37 @@ export function ImageCropSection({ show, season }: ImageCropSectionProps) {
     });
   };
 
-  const handleUpdateAltText = async (imgId: string, altText: string) => {
-    await supabase.from("show_images").update({ alt_text: altText }).eq("id", imgId);
+  const handleUpdateAllAltTexts = async (newAltText: string) => {
+    const cropImageIds = images
+      .filter((i) => CROP_FORMATS.some((f) => f.dbType === i.type))
+      .map((i) => i.id);
+    if (cropImageIds.length === 0) return;
+    await supabase.from("show_images").update({ alt_text: newAltText }).in("id", cropImageIds);
     queryClient.invalidateQueries({ queryKey: ["shows", season] });
+  };
+
+  const handleGenerateAltText = async () => {
+    if (!show.hero_image_url) return;
+    setGeneratingAlt(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-alt-text", {
+        body: {
+          imageUrl: show.hero_image_url,
+          title: show.title,
+          subtitle: show.subtitle,
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      const generated = data.altText || "";
+      setAltText(generated);
+      await handleUpdateAllAltTexts(generated);
+      toast.success("ALT-tekst gegenereerd");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Fout bij genereren ALT-tekst");
+    } finally {
+      setGeneratingAlt(false);
+    }
   };
 
   if (!show.hero_image_url) return null;
@@ -349,33 +390,36 @@ export function ImageCropSection({ show, season }: ImageCropSectionProps) {
         )}
       </div>
 
-      {/* SECTIE 6: ALT-TEKSTEN */}
+      {/* SECTIE 6: ALT-TEKST */}
       {hasCrops && (
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             <Tag className="h-5 w-5 text-primary" />
-            <h3 className="font-semibold text-card-foreground">Alt-teksten</h3>
+            <h3 className="font-semibold text-card-foreground">ALT-tekst</h3>
           </div>
 
-          <div className="space-y-3">
-            {cropImages
-              .filter((c) => c.img)
-              .map(({ fmt, img }) => (
-                <div key={fmt.key} className="flex items-center gap-3">
-                  <img
-                    src={img!.file_url}
-                    alt=""
-                    className="w-12 h-8 rounded object-cover shrink-0"
-                  />
-                  <Label className="text-xs shrink-0 w-20">{fmt.label}</Label>
-                  <Input
-                    className="text-xs"
-                    defaultValue={img!.alt_text || ""}
-                    onBlur={(e) => handleUpdateAltText(img!.id, e.target.value)}
-                  />
-                  <CopyButton value={img!.alt_text || ""} />
-                </div>
-              ))}
+          <div className="flex gap-2">
+            <Input
+              className="text-sm flex-1"
+              value={altText}
+              onChange={(e) => setAltText(e.target.value)}
+              onBlur={() => handleUpdateAllAltTexts(altText)}
+              placeholder="Beschrijvende alt-tekst voor alle afbeeldingen..."
+            />
+            <CopyButton value={altText} />
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5 shrink-0"
+              onClick={handleGenerateAltText}
+              disabled={generatingAlt}
+            >
+              {generatingAlt ? (
+                <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Bezig...</>
+              ) : (
+                <><Sparkles className="h-3.5 w-3.5" /> Genereer met AI</>
+              )}
+            </Button>
           </div>
         </div>
       )}
