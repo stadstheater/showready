@@ -333,23 +333,18 @@ export function ImageCropSection({ show, season }: ImageCropSectionProps) {
               <p className="text-sm font-semibold text-card-foreground">
                 {activeCrop.label} — {activeCrop.width} × {activeCrop.height}
               </p>
-              <div className="flex items-center gap-1">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7"
-                  onClick={() => setZoom((z) => Math.max(1, z - 0.2))}
-                >
-                  <ZoomOut className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7"
-                  onClick={() => setZoom((z) => Math.min(5, z + 0.2))}
-                >
-                  <ZoomIn className="h-4 w-4" />
-                </Button>
+              <div className="flex items-center gap-2">
+                <ZoomOut className="h-4 w-4 text-muted-foreground" />
+                <input
+                  type="range"
+                  min={1}
+                  max={5}
+                  step={0.01}
+                  value={zoom}
+                  onChange={(e) => setZoom(Number(e.target.value))}
+                  className="w-32 accent-primary"
+                />
+                <ZoomIn className="h-4 w-4 text-muted-foreground" />
               </div>
             </div>
 
