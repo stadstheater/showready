@@ -51,7 +51,7 @@ const CHECKLIST_LABELS: Record<keyof ShowChecklist, string> = {
   cropHero: "Crop: Hero",
   cropUitlichten: "Crop: Uitlichten",
   cropNarrow: "Crop: Smal",
-  cropSlider: "Crop: Slider",
+  
 };
 
 export function WebsiteTab({ season, shows }: WebsiteTabProps) {
