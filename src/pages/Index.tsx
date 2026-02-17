@@ -12,7 +12,7 @@ import { useSettings } from "@/hooks/useSettings";
 import {
   Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbPage, BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { Home } from "lucide-react";
+
 
 const TAB_LABELS: Record<TabId, string> = {
   dashboard: "Dashboard",
@@ -64,47 +64,27 @@ const Index = () => {
         onNextSeason={() => setSeason(getNextSeason(season))}
       />
 
-      {/* Breadcrumb */}
-      <div className="container py-3 flex justify-center">
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink
-                className="cursor-pointer flex items-center gap-1"
-                onClick={() => setActiveTab("dashboard")}
-              >
-                <Home className="h-3.5 w-3.5" />
-                Dashboard
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            {activeTab !== "dashboard" && (
-              <>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  {selectedShowName ? (
-                    <BreadcrumbLink
-                      className="cursor-pointer"
-                      onClick={() => setActiveTab(activeTab)}
-                    >
-                      {TAB_LABELS[activeTab]}
-                    </BreadcrumbLink>
-                  ) : (
-                    <BreadcrumbPage>{TAB_LABELS[activeTab]}</BreadcrumbPage>
-                  )}
-                </BreadcrumbItem>
-              </>
-            )}
-            {selectedShowName && (
-              <>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>{selectedShowName}</BreadcrumbPage>
-                </BreadcrumbItem>
-              </>
-            )}
-          </BreadcrumbList>
-        </Breadcrumb>
-      </div>
+      {/* Breadcrumb - only show when there's depth (a show is selected) */}
+      {selectedShowName && (
+        <div className="container py-3 flex justify-center">
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink
+                  className="cursor-pointer"
+                  onClick={() => setSelectedShowName(null)}
+                >
+                  {TAB_LABELS[activeTab]}
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>{selectedShowName}</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+        </div>
+      )}
 
       {isLoading ? (
         <div className="flex items-center justify-center py-24">
