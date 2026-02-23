@@ -1,63 +1,27 @@
 
-# Plan: Instellingen-tab toevoegen
+# Drie aanpassingen
 
-## Wat wordt er gebouwd?
-Een nieuw tabblad "Instellingen" rechts in de tabbalk (met een tandwiel-icoon), waar het marketingteam algemene voorkeuren kan beheren.
+## 1. WebP-kwaliteit naar 90%
+In `src/components/ImageCropSection.tsx` wordt de `canvas.toBlob` kwaliteit van `0.85` naar `0.90` gezet.
 
-## Instellingen die we opnemen
+## 2. Genre "Theater" verwijderen
+In `src/components/VoorstellingenTab.tsx` wordt "Theater" uit de `GENRES` array verwijderd.
 
-### 1. Standaard seizoen
-- Dropdown met beschikbare seizoenen (bijv. 24/25, 25/26, 26/27)
-- De app opent voortaan met dit seizoen in plaats van het automatisch berekende seizoen
-- Optie "Automatisch (huidig seizoen)" als default
+## 3. Kopieer-knoppen verplaatsen naar het einde van elk tekstveld
+In `src/components/WebsiteTab.tsx` worden de `CopyButton` componenten verplaatst van naast de labels naar na/onder het invoerveld, bij:
+- **Focus zoekwoord**: CopyButton van naast het label naar na het Input-veld
+- **SEO-titel**: CopyButton van naast het label naar na het Input-veld
+- **URL-slug**: CopyButton van naast het label naar na de slug-invoer
 
-### 2. AI-instellingen
-- Keuze AI-model voor tekstoptimalisatie (momenteel hardcoded op `gemini-3-flash-preview`)
-- Dropdown met beschikbare modellen (Gemini Flash, Gemini Pro, GPT-5 Mini, etc.)
-- Standaard maximaal woordenaantal voor geoptimaliseerde teksten (nu hardcoded op 150)
+---
 
-### 3. Genrelijst beheren
-- Overzicht van alle genres met mogelijkheid om genres toe te voegen of te verwijderen
-- Zo kan het team zelf de genrelijst uitbreiden zonder code-aanpassingen
+### Technische details
 
-### 4. Standaard tijden
-- Standaard begintijd (nu hardcoded 20:00)
-- Standaard eindtijd (nu hardcoded 22:00)
-- Worden als default ingevuld bij nieuwe voorstellingen
+**Bestand: `src/components/ImageCropSection.tsx`** (regel 76)
+- `0.85` wordt `0.90`
 
-### 5. Export & info
-- Weergave van het huidige aantal voorstellingen per seizoen
-- Versie-informatie van de app
+**Bestand: `src/components/VoorstellingenTab.tsx`** (regel 54)
+- `"Theater"` verwijderen uit de GENRES array
 
-## Technische aanpak
-
-### Database
-- Nieuwe tabel `settings` met kolommen: `key` (text, primary key), `value` (jsonb), `updated_at` (timestamptz)
-- Vooraf gevuld met standaardwaarden
-- RLS: volledig open (geen auth in deze app)
-
-### Nieuwe bestanden
-- `src/components/SettingsTab.tsx` -- het volledige instellingenpaneel
-- `src/hooks/useSettings.ts` -- TanStack Query hook voor laden/opslaan van instellingen
-
-### Aanpassingen aan bestaande bestanden
-
-| Bestand | Wijziging |
-|---|---|
-| `src/components/AppTabs.tsx` | Tab-type uitbreiden met `"instellingen"`, tab toevoegen met Settings-icoon, rechts uitgelijnd |
-| `src/pages/Index.tsx` | `SettingsTab` renderen, standaard seizoen uit settings laden als initieel seizoen |
-| `src/lib/season.ts` | Geen wijziging (blijft fallback) |
-| `supabase/functions/optimize-text/index.ts` | Model en max woorden uit request body halen i.p.v. hardcoded |
-
-### Layout van de Instellingen-tab
-- Gecentreerde kolom (max-w-2xl), vergelijkbaar met een formulierpagina
-- Secties als cards met zinc-800/50 achtergrond
-- Elke instelling met label, beschrijving en invoerveld
-- Auto-save met debounce (400ms), net als de Website-tab
-- Toast-melding "Instellingen opgeslagen" bij succes
-
-### Flow standaard seizoen
-1. Bij app-load: query `settings` tabel voor key `default_season`
-2. Als waarde ingesteld en niet "auto": gebruik die als initieel seizoen
-3. Als "auto" of niet ingesteld: val terug op `getCurrentSeason()`
-4. Gebruiker kan in Instellingen de waarde wijzigen, wordt direct opgeslagen
+**Bestand: `src/components/WebsiteTab.tsx`**
+- Per SEO-veld: de `CopyButton` verplaatsen van de `<div>` met het label naar een positie direct na het invoerveld, zodat het kopieer-icoon rechts aan het einde van het veld verschijnt (niet naast het label)
