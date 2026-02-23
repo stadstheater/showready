@@ -51,7 +51,7 @@ interface VoorstellingenTabProps {
 }
 
 const GENRES = [
-  "Cabaret", "Muziek", "Theater", "Musical", "Jeugd & Familie",
+  "Cabaret", "Muziek", "Musical", "Jeugd & Familie",
   "Dans", "Cultureel initiatief", "Klassieke Muziek", "Show",
   "Toneel", "Theatercollege", "Muziektheater",
 ] as const;

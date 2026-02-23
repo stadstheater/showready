@@ -280,43 +280,43 @@ export function WebsiteTab({ season, shows, onSelectedShowChange }: WebsiteTabPr
         </div>
 
         <div className="space-y-1">
-          <div className="flex items-center gap-1">
-            <Label>Focus zoekwoord</Label>
+          <Label>Focus zoekwoord</Label>
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                className="pl-9"
+                value={seoKeyword}
+                onChange={(e) => handleSeoKeyword(e.target.value)}
+                placeholder="bijv. cabaret Zoetermeer"
+              />
+            </div>
             <CopyButton value={seoKeyword} />
           </div>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              className="pl-9"
-              value={seoKeyword}
-              onChange={(e) => handleSeoKeyword(e.target.value)}
-              placeholder="bijv. cabaret Zoetermeer"
-            />
-          </div>
         </div>
 
         <div className="space-y-1">
-          <div className="flex items-center gap-1">
-            <Label>SEO-titel</Label>
+          <Label>SEO-titel</Label>
+          <div className="flex gap-2">
+            <Input className="flex-1" value={seoTitle} onChange={(e) => handleSeoTitle(e.target.value)} />
             <CopyButton value={seoTitle} />
           </div>
-          <Input value={seoTitle} onChange={(e) => handleSeoTitle(e.target.value)} />
         </div>
 
         <div className="space-y-1">
-          <div className="flex items-center gap-1">
-            <Label>URL-slug</Label>
+          <Label>URL-slug</Label>
+          <div className="flex gap-2">
+            <div className="flex items-center flex-1">
+              <span className="text-xs text-muted-foreground px-3 py-2 border border-r-0 border-border rounded-l-md bg-muted">
+                stadstheaterzoetermeer.nl/
+              </span>
+              <Input
+                className="rounded-l-none"
+                value={seoSlug}
+                onChange={(e) => handleSeoSlug(e.target.value)}
+              />
+            </div>
             <CopyButton value={`stadstheaterzoetermeer.nl/${seoSlug}`} />
-          </div>
-          <div className="flex items-center">
-            <span className="text-xs text-muted-foreground px-3 py-2 border border-r-0 border-border rounded-l-md bg-muted">
-              stadstheaterzoetermeer.nl/
-            </span>
-            <Input
-              className="rounded-l-none"
-              value={seoSlug}
-              onChange={(e) => handleSeoSlug(e.target.value)}
-            />
           </div>
         </div>
       </div>
