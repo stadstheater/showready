@@ -13,9 +13,6 @@ export default defineConfig(({ mode }) => ({
       overlay: false,
     },
   },
-  css: {
-    postcss: { plugins: [] },
-  },
   plugins: [tailwindcss(), react(), mode === "development" && componentTagger({ tailwindConfig: false })].filter(Boolean),
   resolve: {
     alias: {
