@@ -16,7 +16,7 @@ export default defineConfig(({ mode }) => ({
   css: {
     postcss: {},
   },
-  plugins: [tailwindcss(), react(), mode === "development" && componentTagger()].filter(Boolean),
+  plugins: [tailwindcss(), react(), mode === "development" && componentTagger({ tailwindConfig: false })].filter(Boolean),
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
