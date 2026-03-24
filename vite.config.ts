@@ -14,7 +14,7 @@ export default defineConfig(({ mode }) => ({
     },
   },
   css: {
-    postcss: {},
+    postcss: { plugins: [] },
   },
   plugins: [tailwindcss(), react(), mode === "development" && componentTagger({ tailwindConfig: false })].filter(Boolean),
   resolve: {
