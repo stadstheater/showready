@@ -102,8 +102,8 @@ Geef ALLEEN de ALT-tekst terug, zonder verdere uitleg.`,
       });
     }
 
-    const data = await response.json();
-    const altText = data.choices?.[0]?.message?.content?.trim() || "";
+    const result = await response.json();
+    const altText = result.choices?.[0]?.message?.content?.trim() || "";
 
     return new Response(JSON.stringify({ altText }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
