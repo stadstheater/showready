@@ -622,7 +622,7 @@ export function VoorstellingenTab({ season, shows, openNewDialog, onNewDialogClo
 
   return (
     <>
-      <div className="container py-6 space-y-6">
+      <div className="container py-6 space-y-6 animate-fade-in">
         {/* TOOLBAR */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
           <div className="relative flex-1 w-full sm:max-w-xs">
@@ -654,7 +654,7 @@ export function VoorstellingenTab({ season, shows, openNewDialog, onNewDialogClo
               <SelectItem value="afgerond">Afgerond</SelectItem>
             </SelectContent>
           </Select>
-          <Button onClick={openCreate} className="gap-2 ml-auto">
+          <Button onClick={openCreate} className="gap-2 ml-auto shadow-sm">
             <Plus className="h-4 w-4" />
             Nieuwe voorstelling
           </Button>
@@ -662,15 +662,15 @@ export function VoorstellingenTab({ season, shows, openNewDialog, onNewDialogClo
 
         {/* EMPTY STATE */}
         {filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 text-center">
-            <div className="rounded-full bg-muted p-6 mb-5">
-              <Theater className="h-12 w-12 text-muted-foreground/50" />
+          <div className="flex flex-col items-center justify-center py-24 text-center animate-fade-in">
+            <div className="rounded-2xl bg-accent/30 p-8 mb-6">
+              <Theater className="h-14 w-14 text-muted-foreground/40" />
             </div>
-            <h3 className="text-lg font-semibold text-foreground mb-1">Geen voorstellingen</h3>
-            <p className="text-sm text-muted-foreground mb-5 max-w-xs">
+            <h3 className="text-xl font-bold font-serif text-foreground mb-2">Geen voorstellingen</h3>
+            <p className="text-sm text-muted-foreground mb-6 max-w-xs">
               Er zijn nog geen voorstellingen voor seizoen {season}. Voeg je eerste voorstelling toe om te beginnen.
             </p>
-            <Button onClick={openCreate} className="gap-2">
+            <Button onClick={openCreate} className="gap-2 shadow-sm">
               <Plus className="h-4 w-4" /> Maak een voorstelling aan
             </Button>
           </div>
@@ -678,37 +678,37 @@ export function VoorstellingenTab({ season, shows, openNewDialog, onNewDialogClo
           /* GRID */
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {filtered.map((show) => (
-              <Card key={show.id} className="overflow-hidden border-border bg-card group">
+              <Card key={show.id} className="overflow-hidden border-border/60 bg-card group hover:border-border transition-all duration-300 hover:shadow-lg hover:shadow-black/10">
                 {/* Cover image */}
                 <div className="relative h-40 overflow-hidden bg-muted">
                   {show.hero_image_url ? (
                     <img
                       src={show.hero_image_url}
                       alt={show.title}
-                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                     />
                   ) : (
-                    <div className="flex items-center justify-center h-full">
-                      <Image className="h-10 w-10 text-muted-foreground/40" />
+                    <div className="flex items-center justify-center h-full bg-accent/20">
+                      <Image className="h-10 w-10 text-muted-foreground/30" />
                     </div>
                   )}
-                  <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-card to-transparent" />
+                  <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-card via-card/60 to-transparent" />
                   {/* Progress bar */}
-                  <div className="absolute inset-x-0 bottom-0 h-[2px]">
+                  <div className="absolute inset-x-0 bottom-0 h-[3px] bg-accent/20">
                     <div
-                      className={`h-full ${statusColor(show.status)} transition-all`}
+                      className={`h-full ${statusColor(show.status)} transition-all duration-500`}
                       style={{ width: `${show.progress}%` }}
                     />
                   </div>
                 </div>
 
                 {/* Body */}
-                <CardContent className="p-4 space-y-2">
+                <CardContent className="p-4 space-y-2.5">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="font-semibold text-sm text-card-foreground truncate">{show.title || "Zonder titel"}</p>
+                      <p className="font-bold text-sm text-card-foreground truncate">{show.title || "Zonder titel"}</p>
                       {show.subtitle && (
-                        <p className="text-xs text-muted-foreground truncate">{show.subtitle}</p>
+                        <p className="text-xs text-muted-foreground truncate mt-0.5">{show.subtitle}</p>
                       )}
                     </div>
                     <Badge
@@ -741,15 +741,15 @@ export function VoorstellingenTab({ season, shows, openNewDialog, onNewDialogClo
                   </div>
 
                   {show.notes && (
-                    <p className="text-xs italic text-muted-foreground truncate">{show.notes}</p>
+                    <p className="text-xs italic text-muted-foreground/70 truncate">{show.notes}</p>
                   )}
 
                   {/* Actions */}
-                  <div className="flex items-center gap-1 pt-2 border-t border-border">
+                  <div className="flex items-center gap-0.5 pt-2 border-t border-border/50">
                     <TooltipProvider delayDuration={300}>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(show)}>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={() => openEdit(show)}>
                             <Edit3 className="h-3.5 w-3.5" />
                           </Button>
                         </TooltipTrigger>
@@ -757,7 +757,7 @@ export function VoorstellingenTab({ season, shows, openNewDialog, onNewDialogClo
                       </Tooltip>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDuplicate(show)}>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={() => handleDuplicate(show)}>
                             <Copy className="h-3.5 w-3.5" />
                           </Button>
                         </TooltipTrigger>
@@ -767,7 +767,7 @@ export function VoorstellingenTab({ season, shows, openNewDialog, onNewDialogClo
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <AlertDialogTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 ml-auto hover:text-destructive">
+                              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg ml-auto hover:text-destructive">
                                 <Trash2 className="h-3.5 w-3.5" />
                               </Button>
                             </AlertDialogTrigger>
@@ -803,22 +803,22 @@ export function VoorstellingenTab({ season, shows, openNewDialog, onNewDialogClo
 
       {/* ─── MODAL ─── */}
       {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/70 backdrop-blur-sm p-4">
-          <FileDropZone onFilesDropped={handleDroppedFiles} disabled={heroUploading || sceneUploading} className="bg-card border border-border rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-md p-4 animate-fade-in">
+          <FileDropZone onFilesDropped={handleDroppedFiles} disabled={heroUploading || sceneUploading} className="bg-card border border-border/60 rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl shadow-black/30 animate-slide-up">
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-border">
-              <h2 className="text-lg font-semibold text-card-foreground">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-border/50">
+              <h2 className="text-lg font-bold font-serif text-card-foreground">
                 {editingShow ? "Voorstelling bewerken" : "Nieuwe voorstelling"}
               </h2>
-              <Button variant="ghost" size="icon" onClick={closeModal} className="h-8 w-8">
+              <Button variant="ghost" size="icon" onClick={closeModal} className="h-8 w-8 rounded-lg">
                 <X className="h-4 w-4" />
               </Button>
             </div>
 
             {/* Body */}
-            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-5" style={{ maxHeight: "70vh" }}>
+            <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5" style={{ maxHeight: "70vh" }}>
               {/* Season badge */}
-              <Badge className="bg-primary text-primary-foreground text-xs">{season}</Badge>
+              <Badge className="bg-primary text-primary-foreground text-xs shadow-sm">{season}</Badge>
 
               <FormFieldsSortable
                 form={form}
@@ -843,14 +843,14 @@ export function VoorstellingenTab({ season, shows, openNewDialog, onNewDialogClo
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-between px-6 py-4 border-t border-border">
+            <div className="flex items-center justify-between px-6 py-4 border-t border-border/50">
               <span className="text-xs text-muted-foreground">Seizoen {season}</span>
               <div className="flex items-center gap-2">
                 <Button variant="outline" onClick={closeModal}>Annuleer</Button>
                 <Button
                   onClick={handleSave}
                   disabled={createShow.isPending || updateShow.isPending}
-                  className="bg-primary text-primary-foreground hover:bg-primary/90"
+                  className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
                 >
                   {(createShow.isPending || updateShow.isPending) ? "Bezig..." : "Opslaan"}
                 </Button>

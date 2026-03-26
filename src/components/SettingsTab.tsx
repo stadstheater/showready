@@ -223,10 +223,10 @@ export function SettingsTab({ season, showCount }: SettingsTabProps) {
   const sortableSections = sectionOrder.map((id) => ({ id }));
 
   return (
-    <div className="container max-w-2xl py-8 space-y-6">
-      <div className="flex items-center gap-2 mb-2">
-        <Settings className="h-5 w-5 text-muted-foreground" />
-        <h2 className="text-lg font-semibold">Instellingen</h2>
+    <div className="container max-w-2xl py-8 space-y-6 animate-fade-in">
+      <div className="flex items-center gap-2.5 mb-2">
+        <Settings className="h-5 w-5 text-primary/70" />
+        <h2 className="text-xl font-bold font-serif tracking-tight">Instellingen</h2>
       </div>
 
       <SortableList
