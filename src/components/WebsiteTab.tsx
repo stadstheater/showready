@@ -419,15 +419,15 @@ export function WebsiteTab({ season, shows, onSelectedShowChange }: WebsiteTabPr
   const sortableSections = sectionOrder.map((id) => ({ id }));
 
   return (
-    <div className="flex h-[calc(100vh-8rem)]">
+    <div className="flex h-[calc(100vh-5.5rem)]">
       {/* ─── LEFT SIDEBAR ─── */}
-      <div className="w-72 shrink-0 border-r border-border overflow-y-auto p-4 space-y-2">
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+      <div className="w-72 shrink-0 border-r border-border/50 overflow-y-auto p-4 space-y-1.5 bg-card/30">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 mb-1 px-1">
           Voorstellingen ({eligible.length})
         </p>
-        <p className="text-[10px] text-muted-foreground mb-3">↑↓ om te navigeren</p>
+        <p className="text-[10px] text-muted-foreground/50 mb-3 px-1">&#8593;&#8595; om te navigeren</p>
         {eligible.length === 0 ? (
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-muted-foreground px-1">
             Geen voorstellingen met voldoende gegevens — vul titel, datum en afbeelding in
           </p>
         ) : (
@@ -439,28 +439,28 @@ export function WebsiteTab({ season, shows, onSelectedShowChange }: WebsiteTabPr
                 key={show.id}
                 onClick={() => setSelectedId(show.id)}
                 className={cn(
-                  "w-full flex items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors",
+                  "w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-all duration-200",
                   active
-                    ? "bg-accent border border-border"
-                    : "hover:bg-accent/50"
+                    ? "bg-accent border border-border/60 shadow-sm"
+                    : "hover:bg-accent/40 border border-transparent"
                 )}
               >
-                <div className="w-12 h-8 shrink-0 rounded overflow-hidden bg-muted">
+                <div className="w-11 h-8 shrink-0 rounded-lg overflow-hidden bg-muted/60">
                   {show.hero_image_url ? (
                     <img src={show.hero_image_url} alt="" className="w-full h-full object-cover" />
                   ) : (
                     <div className="flex items-center justify-center h-full">
-                      <ImageIcon className="h-3 w-3 text-muted-foreground" />
+                      <ImageIcon className="h-3 w-3 text-muted-foreground/50" />
                     </div>
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-card-foreground truncate">{show.title}</p>
+                  <p className={cn("text-sm font-medium truncate", active ? "text-card-foreground" : "text-card-foreground/80")}>{show.title}</p>
                   {show.subtitle && (
-                    <p className="text-[11px] text-muted-foreground truncate">{show.subtitle}</p>
+                    <p className="text-[11px] text-muted-foreground/70 truncate">{show.subtitle}</p>
                   )}
                 </div>
-                <div className={cn("w-2.5 h-2.5 rounded-full shrink-0", statusColor(st))} />
+                <div className={cn("w-2 h-2 rounded-full shrink-0 ring-2 ring-card/50", statusColor(st))} />
               </button>
             );
           })
@@ -470,21 +470,22 @@ export function WebsiteTab({ season, shows, onSelectedShowChange }: WebsiteTabPr
       {/* ─── RIGHT PANEL ─── */}
       <div className="flex-1 overflow-y-auto p-6 space-y-6">
         {!selected ? (
-          <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-            <Monitor className="h-16 w-16 mb-4 opacity-40" />
-            <p className="text-lg">Selecteer een voorstelling</p>
+          <div className="flex flex-col items-center justify-center h-full text-muted-foreground animate-fade-in">
+            <Monitor className="h-16 w-16 mb-4 opacity-30" />
+            <p className="text-lg font-medium">Selecteer een voorstelling</p>
+            <p className="text-sm text-muted-foreground/60 mt-1">Kies een show in de zijbalk om te bewerken</p>
           </div>
         ) : (
           <>
             {/* Header */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 animate-fade-in">
               {selected.hero_image_url && (
-                <img src={selected.hero_image_url} alt="" className="w-16 h-12 rounded-lg object-cover" />
+                <img src={selected.hero_image_url} alt="" className="w-16 h-12 rounded-xl object-cover shadow-sm" />
               )}
               <div>
-                <h2 className="text-xl font-bold text-card-foreground">{selected.title}</h2>
+                <h2 className="text-xl font-bold font-serif text-card-foreground tracking-tight">{selected.title}</h2>
                 {selected.subtitle && (
-                  <p className="text-sm text-muted-foreground">{selected.subtitle}</p>
+                  <p className="text-sm text-muted-foreground mt-0.5">{selected.subtitle}</p>
                 )}
               </div>
             </div>
